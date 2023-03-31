@@ -1,18 +1,28 @@
 
-### CSCI 5673 Distributed Systems programming assignment 2
+## CSCI 5673 Distributed Systems programming assignment 2
 
 Nikhil Barhate and Sriranga Kalkunte Ramaswamy
 
 
-# To Run
+### To Run
 
 ```
+python3 -m customer_DB.customer_db
+python3 -m product_DB.product_db
+python3 -m server.buyer_server
+python3 -m server.seller_server
+
+```
+
+```
+python3 -m client.test_seller
 python3 -m client.test_buyer
 ```
 
 
 
-# Design aspects:
+
+### Design aspects:
 
     1. Communication between server and DB is acheived using gRPC
     2. Communication between client and server is acheived using REST API via HTTP
@@ -20,7 +30,7 @@ python3 -m client.test_buyer
     4. All response messages contain a boolean variable ('success') to determine the status of the request.
     5. The data is stored in memory on these separate services in the form of nested python dictionaries.
 
-# Assumptions:
+### Assumptions:
 
     - for the search function, the keywords in the database exactly match the keywords in the query
     - while removing an item if updated quantity is less than or equal to 0, then the item is removed from the database
@@ -28,7 +38,7 @@ python3 -m client.test_buyer
         can be refered from results of the search query.
 
 
-# Things that work:
+### Things that work:
 
     - seller side:
         - create a new seller account
@@ -51,7 +61,7 @@ python3 -m client.test_buyer
         
 
 
-Things that do not work:
+### Things that do not work:
 
     - Little to no exception handling
 
