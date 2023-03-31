@@ -1,0 +1,64 @@
+syntax = "proto3";
+
+message SellerResponse{
+    bool success = 1;
+    string message = 2;
+}
+
+message SellerUser{
+    string username = 1;
+    string password = 2;
+    string name = 3;
+    int32 rating_pos = 4;
+    int32 rating_neg = 5;
+}
+
+message SellerRating{
+    bool success = 1;
+    int32 rating_pos = 2;
+    int32 rating_neg = 3;
+}
+
+
+message SellerItem{
+    string name = 1;
+    string condition = 2;
+    int32 category = 3;
+    int32 price = 4;
+    repeated string keywords = 5;
+    string sold_by = 6;
+    int32 quantity = 7;
+}
+
+
+message SellerQuery{
+    string username = 1;
+    SellerItem item = 2;
+    int32 prod_id = 3;
+    int32 quantity = 4;
+    int32 new_price = 5;
+}
+
+message SellerItemResponse{
+    bool success = 1;
+    map<int32, SellerItem> items = 2;
+}
+
+
+service Seller{
+    rpc create_seller(SellerUser) returns(SellerResponse) {}
+    rpc login_seller(SellerUser) returns(SellerResponse) {}
+    rpc logout_seller(SellerUser) returns(SellerResponse) {}
+    rpc get_seller_rating(SellerUser) returns(SellerRating) {}
+    rpc check_seller_login_status(SellerUser) returns(SellerResponse) {}
+
+
+    rpc add_item(SellerQuery) returns(SellerResponse) {}
+    rpc remove_item(SellerQuery) returns(SellerResponse) {}
+    rpc change_price(SellerQuery) returns(SellerResponse) {}
+    rpc all_items_by_seller(SellerUser) returns(SellerItemResponse) {}
+}
+
+
+
+

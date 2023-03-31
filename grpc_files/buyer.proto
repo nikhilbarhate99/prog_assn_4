@@ -1,0 +1,76 @@
+syntax = "proto3";
+
+message BuyerResponse{
+    bool success = 1;
+    string message = 2;
+}
+
+message BuyerUser{
+    string username = 1;
+    string password = 2;
+    string name = 3;
+}
+
+message CartItem{
+    string username = 1;
+    int32 prod_id = 2;
+    int32 quantity = 3;
+}
+
+message CartResponse{
+    bool success = 1;
+    map<int32, int32> cart = 2;
+}
+
+message BuyerSearchQuery{
+    string username = 1;
+    int32 prod_cat = 2;
+    repeated string keywords = 3;
+}
+
+message BuyerItem{
+    string name = 1;
+    string condition = 2;
+    int32 category = 3;
+    int32 price = 4;
+    repeated string keywords = 5;
+    string sold_by = 6;
+    int32 quantity = 7;
+}
+
+message BuyerItemResponse{
+    bool success = 1;
+    map<int32, BuyerItem> items = 2;
+}
+
+message BuyerHistory{
+    bool success = 1;
+    repeated CartItem purchase_history = 2;
+}
+
+message BuyerSellerRating{
+    bool success = 1;
+    int32 rating_pos = 2;
+    int32 rating_neg = 3;
+}
+
+service Buyer{
+    rpc create_buyer(BuyerUser) returns(BuyerResponse) {}
+    rpc login_buyer(BuyerUser) returns(BuyerResponse) {}
+    rpc logout_buyer(BuyerUser) returns(BuyerResponse) {}
+    rpc add_cart(CartItem) returns(BuyerResponse) {}
+    rpc remove_cart(CartItem) returns(BuyerResponse) {}
+    rpc clear_cart(BuyerUser) returns(BuyerResponse) {}
+    rpc display_cart(BuyerUser) returns(CartResponse) {}
+    rpc add_purchase(CartItem) returns(BuyerResponse) {}
+    rpc get_purchase_history(BuyerUser) returns(BuyerHistory) {}
+    rpc get_seller_rating(BuyerUser) returns(BuyerSellerRating) {}
+    rpc check_buyer_login_status(BuyerUser) returns(BuyerResponse) {}
+
+
+    rpc search(BuyerSearchQuery) returns(BuyerItemResponse) {}
+    rpc remove_purchase_item(CartItem) returns(BuyerResponse) {}
+}
+
+
+
