@@ -3,32 +3,14 @@ import json
 import http.client
 import time
 
-# Global Variables
+from global_variables import *
 
-BUFFER_SIZE = 4096
-TIME_OUT = 10
-MAX_WAITING_CONNECTIONS = 50000
-
-BUYER_SERVER_HOST = '127.0.0.1'
-BUYER_SERVER_PORT = 10000
-
-SELLER_SERVER_HOST = '127.0.0.1'
-SELLER_SERVER_PORT = 10001
-
-PRODUCT_DB_HOST = '127.0.0.1'
-PRODUCT_DB_PORT = '10002'
-
-CUSTOMER_DB_HOST = '127.0.0.1'
-CUSTOMER_DB_PORT = '10003'
-
-FINANCIAL_TRANSACTION_HOST = '127.0.0.1'
-FINANCIAL_TRANSACTION_PORT = '10005'
 
 class BuyerClient:
 
     def create_account(self, username, password, name):
         request = {"action": "create_buyer", "username": username, "password": password, "name":name}
-        conn = http.client.HTTPConnection(BUYER_SERVER_HOST, BUYER_SERVER_PORT, timeout=TIME_OUT)
+        conn = http.client.HTTPConnection(BUYER_SERVER_HOST, BUYER_SERVER_PORT, timeout=HTTP_TIME_OUT)
         headers = {'Content-type': 'application/json'}
         conn.request('POST', '/create_buyer', body=json.dumps(request), headers=headers)
         response = conn.getresponse()
@@ -43,7 +25,7 @@ class BuyerClient:
 
     def login(self, username, password):
         request = {"action": "login_buyer", "username": username, "password": password}
-        conn = http.client.HTTPConnection(BUYER_SERVER_HOST, BUYER_SERVER_PORT, timeout=TIME_OUT)
+        conn = http.client.HTTPConnection(BUYER_SERVER_HOST, BUYER_SERVER_PORT, timeout=HTTP_TIME_OUT)
         headers = {'Content-type': 'application/json'}
         conn.request('POST', '/login_buyer', body=json.dumps(request), headers=headers)
         response = conn.getresponse()
@@ -59,7 +41,7 @@ class BuyerClient:
 
     def display_cart(self, username):
         request = {"action": "display_cart", "username": username}
-        conn = http.client.HTTPConnection(BUYER_SERVER_HOST, BUYER_SERVER_PORT, timeout=TIME_OUT)
+        conn = http.client.HTTPConnection(BUYER_SERVER_HOST, BUYER_SERVER_PORT, timeout=HTTP_TIME_OUT)
         headers = {'Content-type': 'application/json'}
         conn.request('POST', '/display_cart', body=json.dumps(request), headers=headers)
         response = conn.getresponse()
@@ -75,7 +57,7 @@ class BuyerClient:
 
     def logout(self, username):
         request = {"action": "logout_buyer", "username": username}
-        conn = http.client.HTTPConnection(BUYER_SERVER_HOST, BUYER_SERVER_PORT, timeout=TIME_OUT)
+        conn = http.client.HTTPConnection(BUYER_SERVER_HOST, BUYER_SERVER_PORT, timeout=HTTP_TIME_OUT)
         headers = {'Content-type': 'application/json'}
         conn.request('POST', '/logout_buyer', body=json.dumps(request), headers=headers)
         response = conn.getresponse()
@@ -90,7 +72,7 @@ class BuyerClient:
 
     def add_to_cart(self, username, prod_id, quantity):
         request = {"action": "add_to_cart", "username": username, "prod_id": prod_id, "quantity": quantity}
-        conn = http.client.HTTPConnection(BUYER_SERVER_HOST, BUYER_SERVER_PORT, timeout=TIME_OUT)
+        conn = http.client.HTTPConnection(BUYER_SERVER_HOST, BUYER_SERVER_PORT, timeout=HTTP_TIME_OUT)
         headers = {'Content-type': 'application/json'}
         conn.request('POST', '/add_to_cart', body=json.dumps(request), headers=headers)
         response = conn.getresponse()
@@ -106,7 +88,7 @@ class BuyerClient:
        
     def remove_cart(self, username, prod_id, quantity):
         request = {"action": "remove_cart", "username": username, "prod_id": prod_id, "quantity": quantity}
-        conn = http.client.HTTPConnection(BUYER_SERVER_HOST, BUYER_SERVER_PORT, timeout=TIME_OUT)
+        conn = http.client.HTTPConnection(BUYER_SERVER_HOST, BUYER_SERVER_PORT, timeout=HTTP_TIME_OUT)
         headers = {'Content-type': 'application/json'}
         conn.request('POST', '/remove_cart', body=json.dumps(request), headers=headers)
         response = conn.getresponse()
@@ -122,7 +104,7 @@ class BuyerClient:
     
     def clear_cart(self, username):
         request = {"action": "clear_cart", "username": username}
-        conn = http.client.HTTPConnection(BUYER_SERVER_HOST, BUYER_SERVER_PORT, timeout=TIME_OUT)
+        conn = http.client.HTTPConnection(BUYER_SERVER_HOST, BUYER_SERVER_PORT, timeout=HTTP_TIME_OUT)
         headers = {'Content-type': 'application/json'}
         conn.request('POST', '/clear_cart', body=json.dumps(request), headers=headers)
         response = conn.getresponse()
@@ -139,7 +121,7 @@ class BuyerClient:
 
     def search_items(self, category, keywords,username):
         request = {"action": "search", "prod_cat": category,"keywords":keywords,"username":username}
-        conn = http.client.HTTPConnection(BUYER_SERVER_HOST, BUYER_SERVER_PORT, timeout=TIME_OUT)
+        conn = http.client.HTTPConnection(BUYER_SERVER_HOST, BUYER_SERVER_PORT, timeout=HTTP_TIME_OUT)
         headers = {'Content-type': 'application/json'}
         conn.request('POST', '/search', body=json.dumps(request), headers=headers)
         response = conn.getresponse()
@@ -154,7 +136,7 @@ class BuyerClient:
 
     def get_purchase_history(self, username):
         request = {"action": "get_purchase_history", "username": username}
-        conn = http.client.HTTPConnection(BUYER_SERVER_HOST, BUYER_SERVER_PORT, timeout=TIME_OUT)
+        conn = http.client.HTTPConnection(BUYER_SERVER_HOST, BUYER_SERVER_PORT, timeout=HTTP_TIME_OUT)
         headers = {'Content-type': 'application/json'}
         conn.request('POST', '/get_purchase_history', body=json.dumps(request), headers=headers)
         response = conn.getresponse()
@@ -171,7 +153,7 @@ class BuyerClient:
 
     def make_purchase(self, username, creditcard ):
         request = {"action": "make_purchase", "username": username, "creditcard":creditcard}
-        conn = http.client.HTTPConnection(BUYER_SERVER_HOST, BUYER_SERVER_PORT, timeout=TIME_OUT)
+        conn = http.client.HTTPConnection(BUYER_SERVER_HOST, BUYER_SERVER_PORT, timeout=HTTP_TIME_OUT)
         headers = {'Content-type': 'application/json'}
         conn.request('POST', '/make_purchase', body=json.dumps(request), headers=headers)
         response = conn.getresponse()
@@ -187,7 +169,7 @@ class BuyerClient:
 
     def get_seller_rating(self, username):
         request = {"action": "get_seller_rating", "username": username}
-        conn = http.client.HTTPConnection(BUYER_SERVER_HOST, BUYER_SERVER_PORT, timeout=TIME_OUT)
+        conn = http.client.HTTPConnection(BUYER_SERVER_HOST, BUYER_SERVER_PORT, timeout=HTTP_TIME_OUT)
         headers = {'Content-type': 'application/json'}
         conn.request('POST', '/get_seller_rating', body=json.dumps(request), headers=headers)
         response = conn.getresponse()

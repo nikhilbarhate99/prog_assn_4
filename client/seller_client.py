@@ -1,54 +1,9 @@
 import urllib.request
-
 import json
-
 import http.client
-
 import time
 
-
-
-# Global Variables
-
-
-
-BUFFER_SIZE = 4096
-
-TIME_OUT = 10
-
-MAX_WAITING_CONNECTIONS = 50000
-
-
-
-BUYER_SERVER_HOST = '127.0.0.1'
-
-BUYER_SERVER_PORT = 10000
-
-
-
-SELLER_SERVER_HOST = '127.0.0.1'
-
-SELLER_SERVER_PORT = 10001
-
-
-
-PRODUCT_DB_HOST = '127.0.0.1'
-
-PRODUCT_DB_PORT = '10002'
-
-
-
-CUSTOMER_DB_HOST = '127.0.0.1'
-
-CUSTOMER_DB_PORT = '10003'
-
-
-
-FINANCIAL_TRANSACTION_HOST = '127.0.0.1'
-
-FINANCIAL_TRANSACTION_PORT = '10005'
-
-
+from global_variables import *
 
 
 
@@ -58,7 +13,7 @@ class SellerClient:
 
         request = {"action": "create_seller", "username": username, "password": password, "name":name}
 
-        conn = http.client.HTTPConnection(SELLER_SERVER_HOST, SELLER_SERVER_PORT, timeout=TIME_OUT)
+        conn = http.client.HTTPConnection(SELLER_SERVER_HOST, SELLER_SERVER_PORT, timeout=HTTP_TIME_OUT)
 
         headers = {'Content-type': 'application/json'}
 
@@ -88,7 +43,7 @@ class SellerClient:
 
         request = {"action": "login_seller", "username": username, "password": password}
 
-        conn = http.client.HTTPConnection(SELLER_SERVER_HOST, SELLER_SERVER_PORT, timeout=TIME_OUT)
+        conn = http.client.HTTPConnection(SELLER_SERVER_HOST, SELLER_SERVER_PORT, timeout=HTTP_TIME_OUT)
 
         headers = {'Content-type': 'application/json'}
 
@@ -118,7 +73,7 @@ class SellerClient:
 
         request = {"action": "logout_seller", "username": username}
 
-        conn = http.client.HTTPConnection(SELLER_SERVER_HOST, SELLER_SERVER_PORT, timeout=TIME_OUT)
+        conn = http.client.HTTPConnection(SELLER_SERVER_HOST, SELLER_SERVER_PORT, timeout=HTTP_TIME_OUT)
 
         headers = {'Content-type': 'application/json'}
 
@@ -148,7 +103,7 @@ class SellerClient:
 
         request = {"action": "get_seller_rating", "username": username}
 
-        conn = http.client.HTTPConnection(SELLER_SERVER_HOST, SELLER_SERVER_PORT, timeout=TIME_OUT)
+        conn = http.client.HTTPConnection(SELLER_SERVER_HOST, SELLER_SERVER_PORT, timeout=HTTP_TIME_OUT)
 
         headers = {'Content-type': 'application/json'}
 
@@ -180,7 +135,7 @@ class SellerClient:
 
         request = {"action": "add_item", "item": item, "quantity":quantity,"username":username}
 
-        conn = http.client.HTTPConnection(SELLER_SERVER_HOST, SELLER_SERVER_PORT, timeout=TIME_OUT)
+        conn = http.client.HTTPConnection(SELLER_SERVER_HOST, SELLER_SERVER_PORT, timeout=HTTP_TIME_OUT)
 
         headers = {'Content-type': 'application/json'}
 
@@ -210,7 +165,7 @@ class SellerClient:
 
         request = {"action": "remove_item", "prod_id": prod_id, "quantity": quantity,"username":username}
 
-        conn = http.client.HTTPConnection(SELLER_SERVER_HOST, SELLER_SERVER_PORT, timeout=TIME_OUT)
+        conn = http.client.HTTPConnection(SELLER_SERVER_HOST, SELLER_SERVER_PORT, timeout=HTTP_TIME_OUT)
 
         headers = {'Content-type': 'application/json'}
 
@@ -242,7 +197,7 @@ class SellerClient:
 
         request = {"action": "change_price", "prod_id": prod_id,"new_price": new_price,"username":username}
 
-        conn = http.client.HTTPConnection(SELLER_SERVER_HOST, SELLER_SERVER_PORT, timeout=TIME_OUT)
+        conn = http.client.HTTPConnection(SELLER_SERVER_HOST, SELLER_SERVER_PORT, timeout=HTTP_TIME_OUT)
 
         headers = {'Content-type': 'application/json'}
 
@@ -274,7 +229,7 @@ class SellerClient:
 
         request = {"action": "all_items_by_seller", "username": username}
 
-        conn = http.client.HTTPConnection(SELLER_SERVER_HOST, SELLER_SERVER_PORT, timeout=TIME_OUT)
+        conn = http.client.HTTPConnection(SELLER_SERVER_HOST, SELLER_SERVER_PORT, timeout=HTTP_TIME_OUT)
 
         headers = {'Content-type': 'application/json'}
 

@@ -4,9 +4,7 @@ from spyne.protocol.soap import Soap11
 from spyne.server.wsgi import WsgiApplication
 import random
 
-
-FINANCIAL_TRANSACTION_HOST = '127.0.0.1'
-FINANCIAL_TRANSACTION_PORT = '10005'
+from global_variables import *
 
 
 class YesNoService(ServiceBase):

@@ -11,23 +11,7 @@ from grpc_files import buyer_pb2_grpc
 
 from google.protobuf.json_format import Parse, ParseDict, MessageToDict, MessageToJson
 
-
-
-
-# Global Variables
-MAX_WORKERS = 10
-
-BUYER_SERVER_HOST = '127.0.0.1'
-BUYER_SERVER_PORT = '10000'
-
-SELLER_SERVER_HOST = '127.0.0.1'
-SELLER_SERVER_PORT = '10001'
-
-PRODUCT_DB_HOST = '127.0.0.1'
-PRODUCT_DB_PORT = '10002'
-
-CUSTOMER_DB_HOST = '127.0.0.1'
-CUSTOMER_DB_PORT = '10003'
+from global_variables import *
 
 
 class DBServer:

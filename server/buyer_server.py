@@ -6,24 +6,7 @@ from google.protobuf.json_format import Parse, ParseDict, MessageToDict, Message
 from suds.client import Client
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
-# Global Variables
-
-BUYER_SERVER_HOST = '127.0.0.1'
-BUYER_SERVER_PORT = 10000
-
-SELLER_SERVER_HOST = '127.0.0.1'
-SELLER_SERVER_PORT = 10001
-
-PRODUCT_DB_HOST = '127.0.0.1'
-PRODUCT_DB_PORT = '10002'
-
-CUSTOMER_DB_HOST = '127.0.0.1'
-CUSTOMER_DB_PORT = '10003'
-
-FINANCIAL_TRANSACTION_HOST = '127.0.0.1'
-FINANCIAL_TRANSACTION_PORT = '10005'
-
-
+from global_variables import *
 
 """
 generate stubs:
