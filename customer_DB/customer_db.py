@@ -170,6 +170,12 @@ class SellerServicer(seller_pb2_grpc.SellerServicer):
         self.db = db
     
     def create_seller(self, request, context):
+
+        ## communicate and figure out all the sequences 
+        ## apply them  
+        ## apply this request
+        ## self.atomic_broadcaster
+
         response_dict = self.db.create_seller(request.username, request.password, request.name)
         response = ParseDict(response_dict, seller_pb2.SellerResponse())
         return response
@@ -273,6 +279,7 @@ def start_server():
     # add port and start server
     server.add_insecure_port(CUSTOMER_DB_HOST + ':' + CUSTOMER_DB_PORT)
     server.start()
+
     server.wait_for_termination()
 
 
