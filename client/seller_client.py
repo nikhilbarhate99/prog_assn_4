@@ -277,10 +277,6 @@ def start_client():
 
 
 
-
-
-
-
     # end_time = time.time()
 
     # time_for_1000_apicalls=end_time - start_time

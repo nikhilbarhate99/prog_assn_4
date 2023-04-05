@@ -5,6 +5,8 @@
 
 HTTP_TIME_OUT = 10
 MAX_WORKERS = 10
+UDP_SOCKET_TIMEOUT = 1.0
+UDP_PACKET_SIZE = 8192
 
 # ====================================================
 

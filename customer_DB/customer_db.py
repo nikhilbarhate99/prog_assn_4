@@ -1,8 +1,11 @@
-
+import argparse
+import sys
 import json
 import grpc
 from concurrent import futures 
 import time
+import socket
+import pickle
 
 from grpc_files import seller_pb2
 from grpc_files import seller_pb2_grpc
@@ -12,6 +15,9 @@ from grpc_files import buyer_pb2_grpc
 from google.protobuf.json_format import Parse, ParseDict, MessageToDict, MessageToJson
 
 from global_variables import *
+
+
+sys.path.append('./grpc_files')
 
 
 class DBServer:
@@ -162,19 +168,103 @@ class DBServer:
         if usr_name in self.logged_buyers:
             return {"success": True, "message": "login session active"}
         return {"success": False, "message": "user not logged in"}
+
+
+
+class RequestMessage:
+    def __init__(self, msg_id, data, meta_data):
+        self.msg_id = msg_id
+        self.data = data
+        self.meta_data = meta_data
+
+class SequenceMessage:
+    def __init__(self, server_id, msg_id, global_seq_num, meta_data):
+        self.server_id = server_id
+        self.msg_id = msg_id
+        self.global_seq_num = global_seq_num
+        self.meta_data = meta_data
+
+class AtomicBroadcaster:
+    def __init__(self, id, node_list):
+
+        self.server_id = id
+        self.local_seq_num = -1
+
+        self.node_list = node_list
+        self.num_nodes = len(node_list)
+        
+        self.request_msg_buffer = dict()
+        self.sequence_msg_buffer = dict()
+
+        host, port = node_list[id]
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.sock.bind((host, int(port)))
+        self.sock.settimeout(UDP_SOCKET_TIMEOUT)
+
+
+    def send_request_message(self, req_data, meta_data):
+        msg_id = (self.server_id, self.local_seq_num)
+        req_msg = RequestMessage(msg_id, req_data, meta_data)
+        self.request_msg_buffer[msg_id] = req_msg
+        for (host, port) in self.node_list:
+            self.sock.sendto(pickle.dumps(req_msg), (host, int(port)))
+
+    def recv_request_message(self):
+        req_msg, addr = self.sock.recvfrom(UDP_PACKET_SIZE)
+        req_msg = pickle.loads(req_msg)
+        return req_msg, addr
+
+
+    def send_sequence_message(self, msg_id, global_seq_num, meta_data):
+        
+        seq_msg = SequenceMessage(self.server_id, msg_id, global_seq_num, meta_data)
+        self.sequence_msg_buffer[msg_id] = global_seq_num
+
+
+        pass
+
+    def consensus(self, request):
+
+        self.send_request_message(request, "meta_data")
+
+        return 0
+
     
+    def apply_requests(self, request_list, db):
+        for req in request_list:
+            if req.meta_data == 'create_seller':
+                request = req.data
+                response_dict = self.db.create_seller(request.username, request.password, request.name)
+        
+        # return last response
+        return response_dict
+
+
+
+
+
+
+
 
 
 class SellerServicer(seller_pb2_grpc.SellerServicer):
-    def __init__(self, db):
+    def __init__(self, db, atomic_broadcaster):
         self.db = db
+        self.atomic_broadcaster = atomic_broadcaster
     
     def create_seller(self, request, context):
 
         ## communicate and figure out all the sequences 
-        ## apply them  
+        ## apply them
         ## apply this request
-        ## self.atomic_broadcaster
+
+        request_list = self.atomic_broadcaster.consensus(request)
+
+        # response_dict = self.atomic_broadcaster.apply_all_req(request_list, self.db)
+
+
+
+
 
         response_dict = self.db.create_seller(request.username, request.password, request.name)
         response = ParseDict(response_dict, seller_pb2.SellerResponse())
@@ -202,8 +292,9 @@ class SellerServicer(seller_pb2_grpc.SellerServicer):
 
 
 class BuyerServicer(buyer_pb2_grpc.BuyerServicer):
-    def __init__(self, db):
+    def __init__(self, db, atomic_broadcaster):
         self.db = db
+        self.atomic_broadcaster = atomic_broadcaster
     
     def create_buyer(self, request, context):
         response_json = self.db.create_buyer(request.username, request.password, request.name)
@@ -262,23 +353,49 @@ class BuyerServicer(buyer_pb2_grpc.BuyerServicer):
     
 
 
-def start_server():
+def start_server(args):
+
+    node_id = args.node_id
+    host, port = CUSTOMER_DB_LIST[node_id]
 
     print("=============================")
     print("Server running")
+    print("Server type: CUSTOMER DB")
+    print("node id:", node_id)
+    print(host, port)
     print("=============================")
+
+    
 
     # initialize db and server
     db = DBServer()
+    atomic_broadcaster = AtomicBroadcaster(node_id, CUSTOMER_DB_LIST)
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=MAX_WORKERS))
 
     # add services to server
-    seller_pb2_grpc.add_SellerServicer_to_server(SellerServicer(db), server)
-    buyer_pb2_grpc.add_BuyerServicer_to_server(BuyerServicer(db), server)
+    seller_pb2_grpc.add_SellerServicer_to_server(SellerServicer(db, atomic_broadcaster), server)
+    buyer_pb2_grpc.add_BuyerServicer_to_server(BuyerServicer(db, atomic_broadcaster), server)
 
     # add port and start server
-    server.add_insecure_port(CUSTOMER_DB_HOST + ':' + CUSTOMER_DB_PORT)
+    server.add_insecure_port(host + ':' + port)
     server.start()
+    
+    while True:
+        try:
+            req_msg, addr = atomic_broadcaster.recv_request_message()
+
+            print('>' * 30)
+            print("recv msg from: ", addr)
+            print(req_msg.msg_id)
+            print(req_msg.data)
+            print(req_msg.meta_data)
+            print('>' * 30)
+
+        except:
+            continue
+
+        pass
+
 
     server.wait_for_termination()
 
@@ -584,7 +701,12 @@ def test_db(db):
 ##########################################################################
 
 if __name__ == '__main__':
-    start_server()
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--node_id', type=int, default=0)
+    args = parser.parse_args()
+
+    start_server(args)
 
 
 

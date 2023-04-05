@@ -7,10 +7,10 @@ Nikhil Barhate and Sriranga Kalkunte Ramaswamy
 ### To Run
 
 ```
-python3 -m customer_DB.customer_db
-python3 -m product_DB.product_db
-python3 -m server.buyer_server
-python3 -m server.seller_server
+python3 -m customer_DB.customer_db --node_id 0
+python3 -m product_DB.product_db --node_id 0
+python3 -m server.buyer_server --node_id 0
+python3 -m server.seller_server --node_id 0
 ```
 
 ```

@@ -1,4 +1,4 @@
-
+import argparse
 import json
 import grpc
 from concurrent import futures 
@@ -176,11 +176,18 @@ class BuyerServicer(buyer_pb2_grpc.BuyerServicer):
         return response
 
 
-def start_server():
+def start_server(args):
+
+    node_id = args.node_id
+    host, port = PRODUCT_DB_LIST[node_id]
 
     print("=============================")
     print("Server running")
+    print("Server type: PRODUCT DB")
+    print("node id:", node_id)
+    print(host, port)
     print("=============================")
+
 
     # initialize db and server
     db = DBServer()
@@ -191,7 +198,7 @@ def start_server():
     buyer_pb2_grpc.add_BuyerServicer_to_server(BuyerServicer(db), server)
 
     # add port and start server
-    server.add_insecure_port(PRODUCT_DB_HOST + ':' + PRODUCT_DB_PORT)
+    server.add_insecure_port(host + ':' + port)
     server.start()
     server.wait_for_termination()
 
@@ -411,7 +418,11 @@ def start_server():
 ##########################################################################
 
 if __name__ == '__main__':
-    start_server()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--node_id', type=int, default=0)
+    args = parser.parse_args()
+
+    start_server(args)
 
 
 
