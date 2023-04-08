@@ -7,6 +7,8 @@ import time
 import socket
 import pickle
 
+import threading
+
 from grpc_files import seller_pb2
 from grpc_files import seller_pb2_grpc
 from grpc_files import buyer_pb2
@@ -36,6 +38,7 @@ class DBServer:
 
         self.purchase_history = dict()
         self.order_id = 0
+
 
     def create_seller(self, usr_name, password, name):
 
@@ -175,6 +178,8 @@ class RequestMessage:
     def __init__(self, msg_id, data, meta_data):
         self.msg_id = msg_id
         self.data = data
+
+        ## global_seq_num_received;func_name
         self.meta_data = meta_data
 
 class SequenceMessage:
@@ -182,6 +187,8 @@ class SequenceMessage:
         self.server_id = server_id
         self.msg_id = msg_id
         self.global_seq_num = global_seq_num
+
+        ## global_seq_num_recv
         self.meta_data = meta_data
 
 class AtomicBroadcaster:
@@ -189,6 +196,7 @@ class AtomicBroadcaster:
 
         self.server_id = id
         self.local_seq_num = -1
+        self.global_seq_num_recv = -1
 
         self.node_list = node_list
         self.num_nodes = len(node_list)
@@ -201,31 +209,74 @@ class AtomicBroadcaster:
         self.sock.bind((host, int(port)))
         self.sock.settimeout(UDP_SOCKET_TIMEOUT)
 
+        # condition variable for mutual exclusion
+        self.lock = threading.Lock()
 
-    def send_request_message(self, req_data, meta_data):
-        msg_id = (self.server_id, self.local_seq_num)
+        
+    def encode_req_msg_meta_data(self, func_name):
+        meta_data = func_name + META_DATA_DELIM + str(self.global_seq_num_recv)
+        return meta_data
+    
+    def decode_req_msg_meta_data(self, meta_data):
+        meta_data = meta_data.split(META_DATA_DELIM)
+        meta_data[1] = int(meta_data[1])
+        return meta_data
+
+    def broadcast_request_message(self, msg_id, req_data, meta_data):
         req_msg = RequestMessage(msg_id, req_data, meta_data)
         self.request_msg_buffer[msg_id] = req_msg
-        for (host, port) in self.node_list:
-            self.sock.sendto(pickle.dumps(req_msg), (host, int(port)))
+        self.broadcast_message(req_msg)
 
-    def recv_request_message(self):
-        req_msg, addr = self.sock.recvfrom(UDP_PACKET_SIZE)
-        req_msg = pickle.loads(req_msg)
-        return req_msg, addr
-
-
-    def send_sequence_message(self, msg_id, global_seq_num, meta_data):
-        
+    def broadcast_sequence_message(self, msg_id, global_seq_num, meta_data):
         seq_msg = SequenceMessage(self.server_id, msg_id, global_seq_num, meta_data)
         self.sequence_msg_buffer[msg_id] = global_seq_num
+        self.broadcast_message(seq_msg)
+    
+
+    def broadcast_message(self, msg):
+        for (host, port) in self.node_list:
+            self.sock.sendto(pickle.dumps(msg), (host, int(port)))
+
+    def send_message(self, msg, node_id):
+        host, port = self.node_list[node_id]
+        self.sock.sendto(pickle.dumps(msg), (host, int(port)))
+
+    def recv_message(self):
+        msg, addr = self.sock.recvfrom(UDP_PACKET_SIZE)
+        msg = pickle.loads(msg)
+
+        addr = (addr[0], str(addr[1]))
+        node_id = self.node_list.index(addr)
+
+        return msg, node_id
+    
+    def process_message(self, msg):
+        if type(msg) == type(RequestMessage):
+            pass
+        elif type(msg) == type(SequenceMessage):
+            pass
 
 
-        pass
+    def consensus(self, request_data, func_name, new_request=True):
+        
+        if new_request:
+            # broadcast the message and start consensus protocol
+            meta_data = self.encode_req_msg_meta_data(func_name)
+            msg_id = (self.server_id, self.local_seq_num)
+            self.broadcast_request_message(msg_id, request_data, meta_data)
+        else:
+            if type(request_data) == type(RequestMessage):
+                pass
+            elif type(request_data) == type(SequenceMessage):
+                pass
 
-    def consensus(self, request):
 
-        self.send_request_message(request, "meta_data")
+        # while True:
+        #     try:
+        #         msg, node_id = self.recv_message()
+
+        #     except:
+        #         continue
 
         return 0
 
@@ -236,11 +287,11 @@ class AtomicBroadcaster:
                 request = req.data
                 response_dict = self.db.create_seller(request.username, request.password, request.name)
         
+
+
+        
         # return last response
         return response_dict
-
-
-
 
 
 
@@ -258,34 +309,58 @@ class SellerServicer(seller_pb2_grpc.SellerServicer):
         ## apply them
         ## apply this request
 
-        request_list = self.atomic_broadcaster.consensus(request)
+        # with self.atomic_broadcaster.condition:
+        #     self.atomic_broadcaster.condition.wait()
+
+        func_name = 'create_seller'
+        request_list = self.atomic_broadcaster.consensus(request, func_name)
 
         # response_dict = self.atomic_broadcaster.apply_all_req(request_list, self.db)
-
-
-
 
 
         response_dict = self.db.create_seller(request.username, request.password, request.name)
         response = ParseDict(response_dict, seller_pb2.SellerResponse())
         return response
 
+
+
     def login_seller(self, request, context):
+
+        func_name = 'login_seller'
+        request_list = self.atomic_broadcaster.consensus(request, func_name)
+
+
         response_dict = self.db.login_seller(request.username, request.password)
         response = ParseDict(response_dict, seller_pb2.SellerResponse())
+
         return response
     
     def logout_seller(self, request, context):
+
+        func_name = 'logout_seller'
+        request_list = self.atomic_broadcaster.consensus(request, func_name)
+
+
         response_dict = self.db.logout_seller(request.username)
         response = ParseDict(response_dict, seller_pb2.SellerResponse())
         return response
     
     def get_seller_rating(self, request, context):
+
+        func_name = 'get_seller_rating'
+        request_list = self.atomic_broadcaster.consensus(request, func_name)
+
+
         response_dict = self.db.get_seller_rating(request.username)
         response = ParseDict(response_dict, seller_pb2.SellerRating())
         return response
 
     def check_seller_login_status(self, request, context):
+
+        func_name = 'check_seller_login_status'
+        request_list = self.atomic_broadcaster.consensus(request, func_name)
+
+
         response_dict = self.db.check_seller_login_status(request.username)
         response = ParseDict(response_dict, seller_pb2.SellerResponse())
         return response
@@ -297,56 +372,111 @@ class BuyerServicer(buyer_pb2_grpc.BuyerServicer):
         self.atomic_broadcaster = atomic_broadcaster
     
     def create_buyer(self, request, context):
+
+        func_name = 'create_buyer'
+        request_list = self.atomic_broadcaster.consensus(request, func_name)
+
+
         response_json = self.db.create_buyer(request.username, request.password, request.name)
         response = ParseDict(response_json, buyer_pb2.BuyerResponse())
         return response
     
     def login_buyer(self, request, context):
+        
+        func_name = 'login_buyer'
+        request_list = self.atomic_broadcaster.consensus(request, func_name)
+
+
         response_json = self.db.login_buyer(request.username, request.password)
         response = ParseDict(response_json, buyer_pb2.BuyerResponse())
         return response
     
     def logout_buyer(self, request, context):
+
+        func_name = 'logout_buyer'
+        request_list = self.atomic_broadcaster.consensus(request, func_name)
+
+
         response_json = self.db.logout_buyer(request.username)
         response = ParseDict(response_json, buyer_pb2.BuyerResponse())
         return response
 
     def add_cart(self, request, context):
+
+        func_name = 'add_cart'
+        request_list = self.atomic_broadcaster.consensus(request, func_name)
+
+
         response_json = self.db.add_cart(request.username, request.prod_id, request.quantity)
         response = ParseDict(response_json, buyer_pb2.BuyerResponse())
         return response
     
     def remove_cart(self, request, context):
+
+        func_name = 'remove_cart'
+        request_list = self.atomic_broadcaster.consensus(request, func_name)
+
+
         response_json = self.db.remove_cart(request.username, request.prod_id, request.quantity)
         response = ParseDict(response_json, buyer_pb2.BuyerResponse())
         return response
 
     def clear_cart(self, request, context):
+
+        func_name = 'clear_cart'
+        request_list = self.atomic_broadcaster.consensus(request, func_name)
+
+
         response_json = self.db.clear_cart(request.username)
         response = ParseDict(response_json, buyer_pb2.BuyerResponse())
         return response
     
     def display_cart(self, request, context):
+
+        func_name = 'display_cart'
+        request_list = self.atomic_broadcaster.consensus(request, func_name)
+
+
         response_json = self.db.display_cart(request.username)
         response = ParseDict(response_json, buyer_pb2.CartResponse())
         return response
     
     def add_purchase(self, request, context):
+
+        func_name = 'add_purchase'
+        request_list = self.atomic_broadcaster.consensus(request, func_name)
+
+
         response_json = self.db.add_purchase(request.username, request.prod_id, request.quantity)
         response = ParseDict(response_json, buyer_pb2.BuyerResponse())
         return response
     
     def get_purchase_history(self, request, context):
+
+        func_name = 'get_purchase_history'
+        request_list = self.atomic_broadcaster.consensus(request, func_name)
+
+
         response_json = self.db.get_purchase_history(request.username)
         response = ParseDict(response_json, buyer_pb2.BuyerHistory())
         return response
 
     def get_seller_rating(self, request, context):
+
+        func_name = 'get_seller_rating'
+        request_list = self.atomic_broadcaster.consensus(request, func_name)
+
+
         response_dict = self.db.get_seller_rating(request.username)
         response = ParseDict(response_dict, buyer_pb2.BuyerSellerRating())
         return response
     
     def check_buyer_login_status(self, request, context):
+
+        func_name = 'check_buyer_login_status'
+        request_list = self.atomic_broadcaster.consensus(request, func_name)
+
+
         response_json = self.db.check_buyer_login_status(request.username)
         response = ParseDict(response_json, buyer_pb2.BuyerResponse())
         return response
@@ -370,7 +500,7 @@ def start_server(args):
     # initialize db and server
     db = DBServer()
     atomic_broadcaster = AtomicBroadcaster(node_id, CUSTOMER_DB_LIST)
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=MAX_WORKERS))
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=CUSTOMER_DB_MAX_WORKERS))
 
     # add services to server
     seller_pb2_grpc.add_SellerServicer_to_server(SellerServicer(db, atomic_broadcaster), server)
@@ -381,20 +511,35 @@ def start_server(args):
     server.start()
     
     while True:
+
+        
         try:
-            req_msg, addr = atomic_broadcaster.recv_request_message()
+            atomic_broadcaster.lock.acquire()
+
+            msg, node_id = atomic_broadcaster.recv_message()
 
             print('>' * 30)
-            print("recv msg from: ", addr)
-            print(req_msg.msg_id)
-            print(req_msg.data)
-            print(req_msg.meta_data)
+            print("recv msg from: ", node_id)
+            print(msg.msg_id)
+            print(msg.meta_data)
+            print(msg.data)
             print('>' * 30)
+            
+            time.sleep(0.2)
 
-        except:
+            atomic_broadcaster.lock.release()
+            
+
+        except Exception as e:
+            
+            print("Following exception occurred: ", e)
+
+            atomic_broadcaster.lock.release()
+            
+            time.sleep(0.5)
+
             continue
 
-        pass
 
 
     server.wait_for_termination()

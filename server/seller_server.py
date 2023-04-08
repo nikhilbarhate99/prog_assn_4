@@ -22,13 +22,13 @@ class SellerServer:
 
     def create_seller(self, request_json, customer_db_stub_list, product_db_stub_list):
         
-        # for now fix the node id to 0
+        ### for now fix the node id to 0
         node_id = 0
         customer_db_stub = customer_db_stub_list[node_id]
         product_db_stub = product_db_stub_list[node_id]
 
-        # customer_db_stub = random.choice(customer_db_stub_list)
-        # product_db_stub = random.choice(product_db_stub_list)
+        # customer_db_stub = random.choice(customer_db_stub_list[:2])
+        # product_db_stub = random.choice(product_db_stub_list[:2])
 
         user = ParseDict(request_json, seller_pb2.SellerUser())
         response = customer_db_stub.create_seller(user)
@@ -387,6 +387,38 @@ def add_dummy_data(server, customer_db_stub, product_db_stub):
     print(type(response))
     print(response)
 
+
+
+
+    # print("=============================")
+
+    # request = {"action": "logout_seller", 
+    #            "username": "usr1",
+    #            }
+
+    # # emulate conversion on network
+    # request = json.loads(json.dumps(request).encode())
+    
+    # action = request.get("action")
+    # print(action)
+    # response = handle_request(server, request, customer_db_stub, product_db_stub)
+    # print(type(response))
+    # print(response)
+
+    # print("=============================")
+
+    # request = {"action": "logout_seller", 
+    #            "username": "usr2",
+    #            }
+
+    # # emulate conversion on network
+    # request = json.loads(json.dumps(request).encode())
+    
+    # action = request.get("action")
+    # print(action)
+    # response = handle_request(server, request, customer_db_stub, product_db_stub)
+    # print(type(response))
+    # print(response)
 
 
 
