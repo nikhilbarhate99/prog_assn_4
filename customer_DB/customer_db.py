@@ -173,30 +173,38 @@ class DBServer:
         return {"success": False, "message": "user not logged in"}
 
 
-
+class MetaData:
+    def __init__(self, max_global_seq_num_recv=None, func_name=None):
+        self.max_global_seq_num_recv = max_global_seq_num_recv
+        self.func_name = func_name
+        
 class RequestMessage:
-    def __init__(self, msg_id, data, meta_data):
+    def __init__(self, sender_id, msg_id, data, meta_data):
+        self.sender_id = sender_id
         self.msg_id = msg_id
         self.data = data
-
-        ## max_global_seq_num_recv;func_name
         self.meta_data = meta_data
 
 class SequenceMessage:
-    def __init__(self, server_id, msg_id, global_seq_num, meta_data):
-        self.server_id = server_id
+    def __init__(self, sender_id, msg_id, global_seq_num, meta_data):
+        self.sender_id = sender_id
         self.msg_id = msg_id
         self.global_seq_num = global_seq_num
-
-        ## max_global_seq_num_recv
         self.meta_data = meta_data
+
+class RetransmissionMessage:
+    def __init__(self, sender_id, ret_msg_id, ret_msg_type):
+        self.sender_id = sender_id
+        self.ret_msg_id = ret_msg_id
+        self.ret_msg_type = ret_msg_type # 'request_msg' or 'sequence_msg'
+        assert ret_msg_type in {'request_msg', 'sequence_msg'}, 'unknown ret_msg_type in Retransmission msg'
 
 class AtomicBroadcaster:
     def __init__(self, id, node_list):
 
         self.server_id = id
-        self.local_seq_num = -1
-        self.max_global_seq_num_recv = -1
+        self.local_seq_num = 0
+        self.max_global_seq_num_recv = 0
 
         self.node_list = node_list
         self.num_nodes = len(node_list)
@@ -210,6 +218,12 @@ class AtomicBroadcaster:
         # maps global_seq -> msg_id (node_id, local_seq_num)
         self.global_seq_msg_buffer = dict()
 
+        # stores current msg ids that have not been applied 
+        self.curr_req_msg = set()
+        self.curr_seq_msg = set()
+
+        # maintain a list of all applied requests
+        self.list_of_applied_requests = []
 
         host, port = node_list[id]
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -219,23 +233,33 @@ class AtomicBroadcaster:
         # condition variable for mutual exclusion
         self.lock = threading.Lock()
 
-    def encode_req_msg_meta_data(self, func_name):
-        meta_data = func_name + META_DATA_DELIM + str(self.max_global_seq_num_recv)
-        return meta_data
+    def send_message(self, msg, node_id):
+        host, port = self.node_list[node_id]
+        self.sock.sendto(pickle.dumps(msg), (host, int(port)))
+
+    def recv_message(self):
+        msg, addr = self.sock.recvfrom(UDP_PACKET_SIZE)
+        msg = pickle.loads(msg)
+        # get node id from address
+        node_id = self.node_list.index((addr[0], str(addr[1])))
+        return msg, node_id
     
-    def decode_req_msg_meta_data(self, meta_data):
-        meta_data = meta_data.split(META_DATA_DELIM)
-        meta_data[1] = int(meta_data[1])
-        return meta_data
+    def broadcast_message(self, msg):
+        for (host, port) in self.node_list:
+            self.sock.sendto(pickle.dumps(msg), (host, int(port)))
+
 
     def broadcast_request_message(self, msg_id, req_data, meta_data):
-        req_msg = RequestMessage(msg_id, req_data, meta_data)
+        req_msg = RequestMessage(self.server_id, msg_id, req_data, meta_data)
 
         # add to request msg buffer
         node, local_seq_num = msg_id
         if node not in self.request_msg_buffer:
             self.request_msg_buffer[node] = dict()
         self.request_msg_buffer[node][local_seq_num] = req_msg
+
+        # add to set of curret req msgs
+        self.curr_req_msg.add(msg_id)
 
         self.broadcast_message(req_msg)
 
@@ -244,53 +268,107 @@ class AtomicBroadcaster:
         
         # add to sequence msg buffer
         node, local_seq_num = msg_id
-        if node not in self.request_msg_buffer:
-            self.request_msg_buffer[node] = dict()
+        if node not in self.sequence_msg_buffer:
+            self.sequence_msg_buffer[node] = dict()
         self.sequence_msg_buffer[node][local_seq_num] = seq_msg
 
-        # add to global_seq_msg_buffer
+        # add global_seq_num to global_seq_msg_buffer
         self.global_seq_msg_buffer[global_seq_num] = msg_id
+        
+        # add to set of current seq messages
+        self.curr_seq_msg.add(msg_id)
+
+        self.max_global_seq_num_recv = max(self.max_global_seq_num_recv, global_seq_num)
 
         self.broadcast_message(seq_msg)
     
 
-    def broadcast_message(self, msg):
-        for (host, port) in self.node_list:
-            self.sock.sendto(pickle.dumps(msg), (host, int(port)))
+    def send_retransmission_msg(self, msg_id, ret_msg_type):
+        node, local_seq_num = msg_id
+        # ask other nodes if msg not in buffer
+        if node not in self.request_msg_buffer or local_seq_num not in self.request_msg_buffer[node]:
+            retransmit_msg = RetransmissionMessage(self.server_id, msg_id, ret_msg_type)
+            self.send_message(retransmit_msg, node)
 
-    def send_message(self, msg, node_id):
-        host, port = self.node_list[node_id]
-        self.sock.sendto(pickle.dumps(msg), (host, int(port)))
-
-    def recv_message(self):
-        msg, addr = self.sock.recvfrom(UDP_PACKET_SIZE)
-        msg = pickle.loads(msg)
-
-        addr = (addr[0], str(addr[1]))
-        node_id = self.node_list.index(addr)
-
-        return msg, node_id
-    
 
     def propose_new_req(self, request, func_name):
-        meta_data = self.encode_req_msg_meta_data(func_name)
+        meta_data = MetaData(self.max_global_seq_num_recv, func_name)
         msg_id = (self.server_id, self.local_seq_num)
         self.broadcast_request_message(msg_id, request, meta_data)
+        return msg_id
 
 
     def process_message(self, msg, node_id):
-        if type(msg) == type(RequestMessage):
-            print(type(msg))
+        
+        if type(msg) == RequestMessage:
+            # add to request msg buffer
+            node, local_seq_num = msg.msg_id
+            if node not in self.request_msg_buffer:
+                self.request_msg_buffer[node] = dict()
+            if local_seq_num not in self.request_msg_buffer[node]:
+                self.request_msg_buffer[node][local_seq_num] = msg
 
-        elif type(msg) == type(SequenceMessage):
-            print(type(msg))
+                # add to list of current unapplied msgs
+                self.curr_req_msg.add(msg.msg_id)
 
-        print('>' * 30)
-        print("recv msg from: ", node_id)
-        print(msg.msg_id)
-        print(msg.meta_data)
-        print(msg.data)
-        print('>' * 30)
+
+            print('>' * 30)
+            print(type(msg))
+            print("recv msg from: ", node_id)
+            print(msg.msg_id)
+            print(msg.meta_data.func_name)
+            print(msg.meta_data.max_global_seq_num_recv)
+            print(msg.data)
+            print('>' * 30)
+
+        elif type(msg) == SequenceMessage:
+            # add to sequence msg buffer
+            node, local_seq_num = msg.msg_id
+            if node not in self.sequence_msg_buffer:
+                self.sequence_msg_buffer[node] = dict()
+            if local_seq_num not in self.sequence_msg_buffer:
+                self.sequence_msg_buffer[node][local_seq_num] = msg
+
+                # also add to global_seq_msg_buffer
+                self.global_seq_msg_buffer[msg.global_seq_num] = msg.msg_id
+
+                # add to list of current unapplied msgs
+                self.curr_seq_msg.add(msg.msg_id)
+
+                self.max_global_seq_num_recv = max(self.max_global_seq_num_recv, msg.global_seq_num)
+
+
+            print('>' * 30)
+            print(type(msg))
+            print("recv msg from: ", node_id)
+            print(msg.msg_id)
+            print(msg.meta_data.max_global_seq_num_recv)
+            print(msg.global_seq_num)
+            print('>' * 30)
+
+        elif type(msg) == RetransmissionMessage:
+            
+            # get msg from buffer
+            node, local_seq_num = msg.ret_msg_id
+            if msg.ret_msg_type == 'request_msg':
+                ret_msg = self.request_msg_buffer[node][local_seq_num]
+            elif msg.ret_msg_type == 'sequence_msg':
+                ret_msg = self.sequence_msg_buffer[node][local_seq_num]
+
+            # send the msg to sender
+            self.send_message(ret_msg, msg.sender_id)
+
+            print('>' * 30)
+            print(type(msg))
+            print("recv msg from: ", node_id)
+            print(msg.ret_msg_id)
+            print(msg.ret_msg_type)
+            print(msg.sender_id)
+            print('>' * 30)
+
+        else:
+            raise NotImplementedError
+
         
 
     def consensus(self):
@@ -298,12 +376,60 @@ class AtomicBroadcaster:
         ##### only keep this in the final consensus() fn
 
         ### keep sending / recieving requests until all msgs received
-        
+
+        """
+        To Do
+
+        add msg in buffer in process msg fn
+        send global sequence msg
+        update local and max_global_seq num
+        apply msgs
+
+        """
+
+
         consensus_reached = False
 
         while not consensus_reached:
             
             # send msg if required
+
+            if self.server_id == 0:
+                # get max(all other nodes' global seq num)
+                max_global_seq = 0
+
+                ### temporary just one node asigns all global seq num
+
+                meta_data = MetaData(self.max_global_seq_num_recv)
+                msg_w_no_global_seq = self.curr_req_msg.difference(self.curr_seq_msg)
+                
+                
+                msg_id = next(iter(msg_w_no_global_seq))
+
+                global_seq_num = self.local_seq_num + 1
+
+
+                # print("%" * 30)
+                # print(msg_id, global_seq_num)
+                # print(self.request_msg_buffer)
+                # print(self.sequence_msg_buffer)
+                # print(self.global_seq_msg_buffer)
+                # print("%" * 30)
+            
+                self.broadcast_sequence_message(msg_id, global_seq_num, meta_data)
+
+            else:
+
+                msg, node_id = self.recv_message()
+                self.process_message(msg, node_id)
+
+
+
+            # if (max_global_seq + 1) % (self.server_id + 1) == 0:
+            #     self.global_seq_msg_buffer += 1
+            #     global_seq_num = self.global_seq_msg_buffer
+            #     msg_id = 
+            #     self.broadcast_sequence_message(msg_id, global_seq_num, meta_data)
 
 
             # receive msg
@@ -311,17 +437,33 @@ class AtomicBroadcaster:
                 msg, node_id = self.recv_message()
                 self.process_message(msg, node_id)
 
+
+                print("@" * 30)
+
                 print("consensus reached ", self.server_id)
+                print("local_seq_num ", self.local_seq_num)
+                print("max_global_seq_num_recv ", self.max_global_seq_num_recv)
+                
+                print(self.request_msg_buffer)
+                print(self.sequence_msg_buffer)
+                print(self.global_seq_msg_buffer)
 
-                consensus_reached = True
+                print("@" * 30)
 
-            except:
+                msg_w_no_global_seq = self.curr_req_msg.difference(self.curr_seq_msg)
+
+                if(len(msg_w_no_global_seq) == 0):
+                    consensus_reached = True
+
+
+            except Exception as e:
                 pass
 
 
-            # time.sleep(WHILE_LOOP_DELAY)
-            
-
+        
+        # clear current messages buffers
+        self.curr_req_msg.clear()
+        self.curr_seq_msg.clear()
 
         return 0
 
@@ -332,17 +474,16 @@ class AtomicBroadcaster:
 
         for s in range(self.local_seq_num + 1, self.max_global_seq_num_recv + 1):
             
+            # get request message with global seq num 's'
             msg_id = self.global_seq_msg_buffer[s]
             node, local_seq_num = msg_id
             req_msg = self.request_msg_buffer[node][local_seq_num]
             
             # extract meta_data
-            meta_data = self.decode_req_msg_meta_data(req_msg.meta_data)
-            func_name = meta_data[0]
-            global_seq_num = meta_data[1]
+            func_name = req_msg.meta_data.func_name
 
             # extract request data (gprc protobuff object)
-            request = req_msg.data
+            request = req_msg.data            
 
             if func_name == 'create_seller':
                 response_dict = db.create_seller(request.username, request.password, request.name)
@@ -353,8 +494,8 @@ class AtomicBroadcaster:
             elif func_name == 'logout_seller':
                 response_dict = db.logout_seller(request.username)
 
-            elif func_name == 'login_seller':
-                pass
+            elif func_name == 'check_seller_login_status':
+                response_dict = db.check_seller_login_status(request.username)
 
             elif func_name == 'login_seller':
                 pass
@@ -367,10 +508,21 @@ class AtomicBroadcaster:
             self.local_seq_num += 1
 
 
+            self.list_of_applied_requests.append([s, func_name, msg_id])
+
+
             # keep current response_dict to return 
             if curr_msg_id is not None and msg_id == curr_msg_id:
                 curr_response_dict = response_dict
+        
+
+        print("&" * 60)
+        print("applying all fns")
+
+        for k in self.list_of_applied_requests:
+            print(k)
             
+        print("&" * 60)
 
         # return curr response dict
         return curr_response_dict
@@ -397,17 +549,16 @@ class SellerServicer(seller_pb2_grpc.SellerServicer):
         self.atomic_broadcaster.lock.acquire()
 
         # broadcast the message and start consensus protocol
-
-        self.atomic_broadcaster.propose_new_req(request, func_name)
+        curr_msg_id = self.atomic_broadcaster.propose_new_req(request, func_name)
 
         self.atomic_broadcaster.consensus()
 
-        # response_dict = self.atomic_broadcaster.apply_all_req(self.db, curr_msg_id)
+        response_dict = self.atomic_broadcaster.apply_requests(self.db, curr_msg_id)
 
         self.atomic_broadcaster.lock.release()
 
 
-        response_dict = self.db.create_seller(request.username, request.password, request.name)
+        # response_dict = self.db.create_seller(request.username, request.password, request.name)
 
 
         response = ParseDict(response_dict, seller_pb2.SellerResponse())
@@ -423,18 +574,17 @@ class SellerServicer(seller_pb2_grpc.SellerServicer):
         self.atomic_broadcaster.lock.acquire()
 
         # broadcast the message and start consensus protocol
-
-        self.atomic_broadcaster.propose_new_req(request, func_name)
+        curr_msg_id = self.atomic_broadcaster.propose_new_req(request, func_name)
 
         self.atomic_broadcaster.consensus()
 
-        # response_dict = self.atomic_broadcaster.apply_all_req(self.db, curr_msg_id)
+        response_dict = self.atomic_broadcaster.apply_requests(self.db, curr_msg_id)
 
         self.atomic_broadcaster.lock.release()
 
+        # response_dict = self.db.login_seller(request.username, request.password)
 
 
-        response_dict = self.db.login_seller(request.username, request.password)
         response = ParseDict(response_dict, seller_pb2.SellerResponse())
 
         return response
@@ -446,20 +596,22 @@ class SellerServicer(seller_pb2_grpc.SellerServicer):
         self.atomic_broadcaster.lock.acquire()
 
         # broadcast the message and start consensus protocol
-
-        self.atomic_broadcaster.propose_new_req(request, func_name)
+        curr_msg_id = self.atomic_broadcaster.propose_new_req(request, func_name)
 
         self.atomic_broadcaster.consensus()
 
-        # response_dict = self.atomic_broadcaster.apply_all_req(self.db, curr_msg_id)
+        response_dict = self.atomic_broadcaster.apply_requests(self.db, curr_msg_id)
 
         self.atomic_broadcaster.lock.release()
 
 
-        response_dict = self.db.logout_seller(request.username)
+        # response_dict = self.db.logout_seller(request.username)
+
+
         response = ParseDict(response_dict, seller_pb2.SellerResponse())
         return response
     
+
     def get_seller_rating(self, request, context):
 
         func_name = 'get_seller_rating'
@@ -473,21 +625,22 @@ class SellerServicer(seller_pb2_grpc.SellerServicer):
     def check_seller_login_status(self, request, context):
 
         func_name = 'check_seller_login_status'
-        
+
         self.atomic_broadcaster.lock.acquire()
 
         # broadcast the message and start consensus protocol
-
-        self.atomic_broadcaster.propose_new_req(request, func_name)
+        curr_msg_id = self.atomic_broadcaster.propose_new_req(request, func_name)
 
         self.atomic_broadcaster.consensus()
 
-        # response_dict = self.atomic_broadcaster.apply_all_req(self.db, curr_msg_id)
+        response_dict = self.atomic_broadcaster.apply_requests(self.db, curr_msg_id)
 
         self.atomic_broadcaster.lock.release()
 
 
-        response_dict = self.db.check_seller_login_status(request.username)
+        # response_dict = self.db.check_seller_login_status(request.username)
+
+
         response = ParseDict(response_dict, seller_pb2.SellerResponse())
         return response
 
@@ -650,6 +803,7 @@ def start_server(args):
 
             atomic_broadcaster.consensus()
 
+            atomic_broadcaster.apply_requests(db, None)
 
             atomic_broadcaster.lock.release()
 
