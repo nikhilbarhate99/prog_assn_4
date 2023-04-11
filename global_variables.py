@@ -9,7 +9,7 @@ MAX_WORKERS = 1     # Keep it 1 for sequential Customer DB (otherwise concurrent
 CUSTOMER_DB_MAX_WORKERS = 1
 
 UDP_SOCKET_TIMEOUT = 1.0
-UDP_PACKET_SIZE = 8192
+UDP_PACKET_SIZE = 1024 # 1024 / 4096 / 8192
 
 META_DATA_DELIM = ';'
 WHILE_LOOP_DELAY = 0.3

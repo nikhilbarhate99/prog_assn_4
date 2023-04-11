@@ -174,26 +174,27 @@ class DBServer:
 
 
 class MetaData:
-    def __init__(self, max_global_seq_num=None, func_name=None):
+    def __init__(self, max_global_seq_num=None, node_wise_msgs=[]):
         self.max_global_seq_num = max_global_seq_num
-        self.func_name = func_name
+        self.node_wise_msgs = node_wise_msgs
         
 class RequestMessage:
-    def __init__(self, sender_id, msg_id, data, meta_data):
+    def __init__(self, sender_id, msg_id, data, func_name, meta_data=None):
         self.sender_id = sender_id
         self.msg_id = msg_id
+        self.func_name = func_name
         self.data = data
         self.meta_data = meta_data
 
 class SequenceMessage:
-    def __init__(self, sender_id, msg_id, global_seq_num, meta_data):
+    def __init__(self, sender_id, msg_id, global_seq_num, meta_data=None):
         self.sender_id = sender_id
         self.msg_id = msg_id
         self.global_seq_num = global_seq_num
         self.meta_data = meta_data
 
 class RetransmissionMessage:
-    def __init__(self, sender_id, ret_msg_id, ret_msg_type, meta_data):
+    def __init__(self, sender_id, ret_msg_id, ret_msg_type, meta_data=None):
         self.sender_id = sender_id
         self.ret_msg_id = ret_msg_id
         self.ret_msg_type = ret_msg_type # 'request_msg' or 'sequence_msg'
@@ -216,6 +217,10 @@ class AtomicBroadcaster:
         self.local_seq_num = -1
         self.max_global_seq_num = -1
 
+
+        # self.node_wise_msgs = [-1] * 
+
+
         # maps node -> local_seq_num -> req_msg 
         self.request_msg_buffer = dict()
 
@@ -229,6 +234,10 @@ class AtomicBroadcaster:
         self.curr_req_msg = set()
         self.curr_seq_msg = set()
 
+        self.curr_missing_msg = set()
+        self.curr_missing_global = set()
+
+
         # maintain a list of all delivered requests
         self.list_of_delivered_requests = []
 
@@ -241,6 +250,13 @@ class AtomicBroadcaster:
         self.lock = threading.Lock()
 
     def send_message(self, msg, node_id):
+        # set meta data
+        meta_data = MetaData(self.max_global_seq_num)
+        msg.meta_data = meta_data
+
+        print("LEN OF UDP PACKET: ", len(pickle.dumps(msg)))
+
+        
         host, port = self.node_list[node_id]
         self.sock.sendto(pickle.dumps(msg), (host, int(port)))
 
@@ -252,12 +268,19 @@ class AtomicBroadcaster:
         return msg, node_id
     
     def broadcast_message(self, msg):
+        # set meta data
+        meta_data = MetaData(self.max_global_seq_num)
+        msg.meta_data = meta_data
+        
+        print("LEN OF UDP PACKET: ", len(pickle.dumps(msg)))
+
         for (host, port) in self.node_list:
             self.sock.sendto(pickle.dumps(msg), (host, int(port)))
 
 
-    def broadcast_request_message(self, msg_id, req_data, meta_data):
-        req_msg = RequestMessage(self.server_id, msg_id, req_data, meta_data)
+    def broadcast_request_message(self, msg_id, req_data, func_name):
+        
+        req_msg = RequestMessage(self.server_id, msg_id, req_data, func_name)
 
         # add to request msg buffer
         node, local_seq_num = req_msg.msg_id
@@ -271,8 +294,8 @@ class AtomicBroadcaster:
         self.broadcast_message(req_msg)
 
 
-    def broadcast_sequence_message(self, msg_id, global_seq_num, meta_data):
-        seq_msg = SequenceMessage(self.server_id, msg_id, global_seq_num, meta_data)
+    def broadcast_sequence_message(self, msg_id, global_seq_num):
+        seq_msg = SequenceMessage(self.server_id, msg_id, global_seq_num)
         
         # add to sequence msg buffer
         node, local_seq_num = msg_id
@@ -295,9 +318,8 @@ class AtomicBroadcaster:
 
 
     def propose_new_req(self, request, func_name):
-        meta_data = MetaData(self.max_global_seq_num, func_name)
         msg_id = (self.server_id, self.local_seq_num)
-        self.broadcast_request_message(msg_id, request, meta_data)
+        self.broadcast_request_message(msg_id, request, func_name)
         return msg_id
 
 
@@ -314,12 +336,11 @@ class AtomicBroadcaster:
                 # add to list of current unapplied msgs
                 self.curr_req_msg.add(msg.msg_id)
 
-
             print('>' * 30)
             print(type(msg))
             print("recv msg from: ", node_id)
             print("msg_id: ", msg.msg_id)
-            print("func_name: ", msg.meta_data.func_name)
+            print("func_name: ", msg.func_name)
             print("max_global_seq_num: ", msg.meta_data.max_global_seq_num)
             print("data: ", msg.data)
             print('>' * 30)
@@ -337,8 +358,6 @@ class AtomicBroadcaster:
 
                 # add to list of current unapplied msgs
                 self.curr_seq_msg.add(msg.msg_id)
-
-                self.max_global_seq_num = max(self.max_global_seq_num, msg.global_seq_num)
 
 
             print('>' * 30)
@@ -379,7 +398,12 @@ class AtomicBroadcaster:
         else:
             raise NotImplementedError
 
-        
+
+        # update max global seq based on meta data
+        if msg.meta_data.max_global_seq_num > self.max_global_seq_num:
+            self.max_global_seq_num = msg.meta_data.max_global_seq_num
+
+
 
     def consensus(self):
         
@@ -387,83 +411,90 @@ class AtomicBroadcaster:
 
         ### keep sending / recieving requests until all msgs received
 
-        """
-        To Do
-
-        add msg in buffer in process msg fn
-        send global sequence msg
-        update local and max_global_seq num
-        apply msgs
-
-        """
-
 
         consensus_reached = False
-
+        
         while not consensus_reached:
             
             ###### send msgs ######
 
+            """
+            
+            need all req msg and seq msgs for all seq num < k
+
+            need all req - seq corresponding msgs
+
+            """
+            # deal with misssing msgs
+
+            # get missing msgs from prev node for msg < k
+            # could also be next nodes ? dont care about them , prev node assigns global seq num
+
+
             # get seq msg for coresponding req msg
             # get req msg for coresponding seq msg
-            # get missing msgs 
+            
+
             # all in a set 'missing_msgs'
             # no consensus until len(missing_msgs) = 0
+            # max_global_seq > local seq num
 
 
-            msg_w_no_global_seq = self.curr_req_msg.difference(self.curr_seq_msg)
+            ## ask prev_node about all msgs < k 
+            # # could also be next nodes ? dont care about them , prev node assigns global seq num
 
-            # get max(all other nodes' global seq num)
+
+
+
+
+            req_msg_w_no_seq = self.curr_req_msg.difference(self.curr_seq_msg)
+
+            next_local_seq = self.local_seq_num + 1
             next_global_seq = self.max_global_seq_num + 1
-            
-            if next_global_seq % self.num_nodes == self.server_id and len(msg_w_no_global_seq) > 0:
+
+            # handle req msg with no seq msg
+            if len(req_msg_w_no_seq) > 0:
                 
-                ### temporary just one node asigns all global seq num
+                if next_global_seq % self.num_nodes == self.server_id:
+                    
+                    ### temporary just one node asigns all global seq num
 
-                global_seq_num = next_global_seq
+                    global_seq_num = next_global_seq
 
-                self.max_global_seq_num = max(self.max_global_seq_num, global_seq_num)
+                    self.max_global_seq_num = max(self.max_global_seq_num, global_seq_num)
+                    
+                    msg_id = next(iter(req_msg_w_no_seq))
 
-                meta_data = MetaData()
+
+                    print("ASSIGNING GLOBAL SEQ NUM")
+                    print(msg_id)
+                    print(global_seq_num)
+
+
+                    # print("%" * 30)
+                    # print(msg_id, global_seq_num)
+                    # print(self.request_msg_buffer)
+                    # print(self.sequence_msg_buffer)
+                    # print(self.global_seq_msg_buffer)
+                    # print("%" * 30)
                 
-                msg_id = next(iter(msg_w_no_global_seq))
+                    self.broadcast_sequence_message(msg_id, global_seq_num)
+                
+                else:
+                    
+                    # ask for corresponding sequence msg
 
-
-                print("ASSIGNING GLOBAL SEQ NUM")
-                print(msg_id)
-                print(global_seq_num)
-
-
-                # print("%" * 30)
-                # print(msg_id, global_seq_num)
-                # print(self.request_msg_buffer)
-                # print(self.sequence_msg_buffer)
-                # print(self.global_seq_msg_buffer)
-                # print("%" * 30)
-            
-                self.broadcast_sequence_message(msg_id, global_seq_num, meta_data)
-
-            # else:
-            #     # not this nodes turn to assign
-            #     # so wait / ask for a seq num
-
-            #     for msg_id in iter(msg_w_no_global_seq):
-            #         if msg_id[0] != self.server_id:
-            #             self.send_retransmission_msg(self, msg_id, "sequence_msg")
-
-            #     time.sleep(0.1)
+                    pass
             
 
 
-
-            # if max_global_seq % self.num_nodes == self.server_id:
-            #     self.global_seq_msg_buffer += 1
-            #     global_seq_num = self.global_seq_msg_buffer
-            #     msg_id = 
-            #     self.broadcast_sequence_message(msg_id, global_seq_num, meta_data)
-
+            seq_msg_w_no_req = self.curr_seq_msg.difference(self.curr_req_msg)
+            if len(req_msg_w_no_seq) > 0:
+                # ask for corresponding request msg
+                pass
 
             
+
 
             ###### receive and process msgs ######
             try:
@@ -478,7 +509,7 @@ class AtomicBroadcaster:
 
             ###### check consensus conditions ######
 
-            msg_w_no_global_seq = self.curr_req_msg.difference(self.curr_seq_msg)
+            req_msg_w_no_seq = self.curr_req_msg.difference(self.curr_seq_msg)
 
 
             print("@" * 30)
@@ -493,12 +524,13 @@ class AtomicBroadcaster:
             print('-' * 10)
             print("curr_seq_msg ", self.curr_seq_msg)
             print('-' * 10)
-            print("msg_w_no_global_seq ", msg_w_no_global_seq)
+            print("req_msg_w_no_seq ", req_msg_w_no_seq)
 
             print("@" * 30)
             
 
-            if(len(msg_w_no_global_seq) == 0):
+            # exit if we have all the required msgs
+            if(self.curr_req_msg == self.curr_seq_msg):
 
                 print("consensus reached ", self.server_id)
                 print("local_seq_num ", self.local_seq_num)
@@ -534,12 +566,10 @@ class AtomicBroadcaster:
             # get request message with global seq num 's'
             msg_id = self.global_seq_msg_buffer[s]
             node, local_seq_num = msg_id
-            req_msg = self.request_msg_buffer[node][local_seq_num]
-            
-            # extract meta_data
-            func_name = req_msg.meta_data.func_name
+            req_msg = self.request_msg_buffer[node][local_seq_num]            
 
-            # extract request data (gprc protobuff object)
+            # extract request func_name and data (gprc protobuff object)
+            func_name = req_msg.func_name
             request = req_msg.data            
 
             # deliver the msg
