@@ -27,8 +27,8 @@ class SellerServer:
         customer_db_stub = customer_db_stub_list[node_id]
         product_db_stub = product_db_stub_list[node_id]
 
-        # customer_db_stub = random.choice(customer_db_stub_list[:2])
-        # product_db_stub = random.choice(product_db_stub_list[:2])
+        customer_db_stub = random.choice(customer_db_stub_list[:3])
+        product_db_stub = random.choice(product_db_stub_list[:1])
 
         user = ParseDict(request_json, seller_pb2.SellerUser())
         response = customer_db_stub.create_seller(user)
@@ -43,8 +43,8 @@ class SellerServer:
         customer_db_stub = customer_db_stub_list[node_id]
         product_db_stub = product_db_stub_list[node_id]
 
-        # customer_db_stub = random.choice(customer_db_stub_list)
-        # product_db_stub = random.choice(product_db_stub_list)
+        customer_db_stub = random.choice(customer_db_stub_list[:3])
+        product_db_stub = random.choice(product_db_stub_list[:1])
 
         user = ParseDict(request_json, seller_pb2.SellerUser())
         response = customer_db_stub.login_seller(user)
@@ -59,8 +59,8 @@ class SellerServer:
         customer_db_stub = customer_db_stub_list[node_id]
         product_db_stub = product_db_stub_list[node_id]
 
-        # customer_db_stub = random.choice(customer_db_stub_list)
-        # product_db_stub = random.choice(product_db_stub_list)
+        customer_db_stub = random.choice(customer_db_stub_list[:3])
+        product_db_stub = random.choice(product_db_stub_list[:1])
 
         user = ParseDict(request_json, seller_pb2.SellerUser())
         response = customer_db_stub.logout_seller(user)
@@ -75,8 +75,8 @@ class SellerServer:
         customer_db_stub = customer_db_stub_list[node_id]
         product_db_stub = product_db_stub_list[node_id]
 
-        # customer_db_stub = random.choice(customer_db_stub_list)
-        # product_db_stub = random.choice(product_db_stub_list)
+        customer_db_stub = random.choice(customer_db_stub_list[:3])
+        product_db_stub = random.choice(product_db_stub_list[:1])
 
         user = ParseDict(request_json, seller_pb2.SellerUser())
         response = customer_db_stub.get_seller_rating(user)
@@ -91,8 +91,8 @@ class SellerServer:
         customer_db_stub = customer_db_stub_list[node_id]
         product_db_stub = product_db_stub_list[node_id]
 
-        # customer_db_stub = random.choice(customer_db_stub_list)
-        # product_db_stub = random.choice(product_db_stub_list)
+        customer_db_stub = random.choice(customer_db_stub_list[:3])
+        product_db_stub = random.choice(product_db_stub_list[:1])
 
         login_status = self.check_seller_login_status({'username' : request_json['username']}, 
                             customer_db_stub_list, product_db_stub_list)['success']        
@@ -113,8 +113,8 @@ class SellerServer:
         customer_db_stub = customer_db_stub_list[node_id]
         product_db_stub = product_db_stub_list[node_id]
 
-        # customer_db_stub = random.choice(customer_db_stub_list)
-        # product_db_stub = random.choice(product_db_stub_list)
+        customer_db_stub = random.choice(customer_db_stub_list[:3])
+        product_db_stub = random.choice(product_db_stub_list[:1])
 
         login_status = self.check_seller_login_status({'username' : request_json['username']}, 
                             customer_db_stub_list, product_db_stub_list)['success']        
@@ -135,8 +135,8 @@ class SellerServer:
         customer_db_stub = customer_db_stub_list[node_id]
         product_db_stub = product_db_stub_list[node_id]
 
-        # customer_db_stub = random.choice(customer_db_stub_list)
-        # product_db_stub = random.choice(product_db_stub_list)
+        customer_db_stub = random.choice(customer_db_stub_list[:3])
+        product_db_stub = random.choice(product_db_stub_list[:1])
 
         login_status = self.check_seller_login_status({'username' : request_json['username']}, 
                             customer_db_stub_list, product_db_stub_list)['success']        
@@ -157,8 +157,8 @@ class SellerServer:
         customer_db_stub = customer_db_stub_list[node_id]
         product_db_stub = product_db_stub_list[node_id]
 
-        # customer_db_stub = random.choice(customer_db_stub_list)
-        # product_db_stub = random.choice(product_db_stub_list)
+        customer_db_stub = random.choice(customer_db_stub_list[:3])
+        product_db_stub = random.choice(product_db_stub_list[:1])
 
         login_status = self.check_seller_login_status({'username' : request_json['username']}, 
                             customer_db_stub_list, product_db_stub_list)['success']
@@ -178,8 +178,8 @@ class SellerServer:
         customer_db_stub = customer_db_stub_list[node_id]
         product_db_stub = product_db_stub_list[node_id]
 
-        # customer_db_stub = random.choice(customer_db_stub_list)
-        # product_db_stub = random.choice(product_db_stub_list)
+        customer_db_stub = random.choice(customer_db_stub_list[:3])
+        product_db_stub = random.choice(product_db_stub_list[:1])
 
         user = ParseDict(request_json, seller_pb2.SellerUser())
         response = customer_db_stub.check_seller_login_status(user)
