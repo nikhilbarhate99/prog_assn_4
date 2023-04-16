@@ -6,13 +6,15 @@
 HTTP_TIME_OUT = 10
 MAX_WORKERS = 1     # Keep it 1 for sequential Customer DB (otherwise concurrent)
 
-CUSTOMER_DB_MAX_WORKERS = 1
+CUSTOMER_DB_MAX_WORKERS = 5
 
 UDP_SOCKET_TIMEOUT = 1.0
 UDP_PACKET_SIZE = 1024 # 1024 / 4096 / 8192
 
-META_DATA_DELIM = ';'
-WHILE_LOOP_DELAY = 0.2
+RECEIVE_LOOP_DELAY = 0.2
+
+CUSTOMER_DB_N = 3
+PRODUCT_DB_N = 1
 
 # ====================================================
 

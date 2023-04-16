@@ -22,13 +22,8 @@ class SellerServer:
 
     def create_seller(self, request_json, customer_db_stub_list, product_db_stub_list):
         
-        ### for now fix the node id to 0
-        node_id = 0
-        customer_db_stub = customer_db_stub_list[node_id]
-        product_db_stub = product_db_stub_list[node_id]
-
-        customer_db_stub = random.choice(customer_db_stub_list[:3])
-        product_db_stub = random.choice(product_db_stub_list[:1])
+        customer_db_stub = random.choice(customer_db_stub_list)
+        product_db_stub = random.choice(product_db_stub_list)
 
         user = ParseDict(request_json, seller_pb2.SellerUser())
         response = customer_db_stub.create_seller(user)
@@ -38,13 +33,8 @@ class SellerServer:
 
     def login_seller(self, request_json, customer_db_stub_list, product_db_stub_list):
 
-        # for now fix the node id to 0
-        node_id = 0
-        customer_db_stub = customer_db_stub_list[node_id]
-        product_db_stub = product_db_stub_list[node_id]
-
-        customer_db_stub = random.choice(customer_db_stub_list[:3])
-        product_db_stub = random.choice(product_db_stub_list[:1])
+        customer_db_stub = random.choice(customer_db_stub_list)
+        product_db_stub = random.choice(product_db_stub_list)
 
         user = ParseDict(request_json, seller_pb2.SellerUser())
         response = customer_db_stub.login_seller(user)
@@ -54,13 +44,8 @@ class SellerServer:
 
     def logout_seller(self, request_json, customer_db_stub_list, product_db_stub_list):
 
-        # for now fix the node id to 0
-        node_id = 0
-        customer_db_stub = customer_db_stub_list[node_id]
-        product_db_stub = product_db_stub_list[node_id]
-
-        customer_db_stub = random.choice(customer_db_stub_list[:3])
-        product_db_stub = random.choice(product_db_stub_list[:1])
+        customer_db_stub = random.choice(customer_db_stub_list)
+        product_db_stub = random.choice(product_db_stub_list)
 
         user = ParseDict(request_json, seller_pb2.SellerUser())
         response = customer_db_stub.logout_seller(user)
@@ -70,13 +55,8 @@ class SellerServer:
 
     def get_seller_rating(self, request_json, customer_db_stub_list, product_db_stub_list):
 
-        # for now fix the node id to 0
-        node_id = 0
-        customer_db_stub = customer_db_stub_list[node_id]
-        product_db_stub = product_db_stub_list[node_id]
-
-        customer_db_stub = random.choice(customer_db_stub_list[:3])
-        product_db_stub = random.choice(product_db_stub_list[:1])
+        customer_db_stub = random.choice(customer_db_stub_list)
+        product_db_stub = random.choice(product_db_stub_list)
 
         user = ParseDict(request_json, seller_pb2.SellerUser())
         response = customer_db_stub.get_seller_rating(user)
@@ -86,13 +66,8 @@ class SellerServer:
 
     def add_item(self, request_json, customer_db_stub_list, product_db_stub_list):
 
-        # for now fix the node id to 0
-        node_id = 0
-        customer_db_stub = customer_db_stub_list[node_id]
-        product_db_stub = product_db_stub_list[node_id]
-
-        customer_db_stub = random.choice(customer_db_stub_list[:3])
-        product_db_stub = random.choice(product_db_stub_list[:1])
+        customer_db_stub = random.choice(customer_db_stub_list)
+        product_db_stub = random.choice(product_db_stub_list)
 
         login_status = self.check_seller_login_status({'username' : request_json['username']}, 
                             customer_db_stub_list, product_db_stub_list)['success']        
@@ -108,13 +83,8 @@ class SellerServer:
 
     def remove_item(self, request_json, customer_db_stub_list, product_db_stub_list):
 
-        # for now fix the node id to 0
-        node_id = 0
-        customer_db_stub = customer_db_stub_list[node_id]
-        product_db_stub = product_db_stub_list[node_id]
-
-        customer_db_stub = random.choice(customer_db_stub_list[:3])
-        product_db_stub = random.choice(product_db_stub_list[:1])
+        customer_db_stub = random.choice(customer_db_stub_list)
+        product_db_stub = random.choice(product_db_stub_list)
 
         login_status = self.check_seller_login_status({'username' : request_json['username']}, 
                             customer_db_stub_list, product_db_stub_list)['success']        
@@ -130,13 +100,8 @@ class SellerServer:
 
     def change_price(self, request_json, customer_db_stub_list, product_db_stub_list):
 
-        # for now fix the node id to 0
-        node_id = 0
-        customer_db_stub = customer_db_stub_list[node_id]
-        product_db_stub = product_db_stub_list[node_id]
-
-        customer_db_stub = random.choice(customer_db_stub_list[:3])
-        product_db_stub = random.choice(product_db_stub_list[:1])
+        customer_db_stub = random.choice(customer_db_stub_list)
+        product_db_stub = random.choice(product_db_stub_list)
 
         login_status = self.check_seller_login_status({'username' : request_json['username']}, 
                             customer_db_stub_list, product_db_stub_list)['success']        
@@ -152,13 +117,8 @@ class SellerServer:
 
     def all_items_by_seller(self, request_json, customer_db_stub_list, product_db_stub_list):
 
-        # for now fix the node id to 0
-        node_id = 0
-        customer_db_stub = customer_db_stub_list[node_id]
-        product_db_stub = product_db_stub_list[node_id]
-
-        customer_db_stub = random.choice(customer_db_stub_list[:3])
-        product_db_stub = random.choice(product_db_stub_list[:1])
+        customer_db_stub = random.choice(customer_db_stub_list)
+        product_db_stub = random.choice(product_db_stub_list)
 
         login_status = self.check_seller_login_status({'username' : request_json['username']}, 
                             customer_db_stub_list, product_db_stub_list)['success']
@@ -173,13 +133,8 @@ class SellerServer:
 
     def check_seller_login_status(self, request_json, customer_db_stub_list, product_db_stub_list):
 
-        # for now fix the node id to 0
-        node_id = 0
-        customer_db_stub = customer_db_stub_list[node_id]
-        product_db_stub = product_db_stub_list[node_id]
-
-        customer_db_stub = random.choice(customer_db_stub_list[:3])
-        product_db_stub = random.choice(product_db_stub_list[:1])
+        customer_db_stub = random.choice(customer_db_stub_list)
+        product_db_stub = random.choice(product_db_stub_list)
 
         user = ParseDict(request_json, seller_pb2.SellerUser())
         response = customer_db_stub.check_seller_login_status(user)
@@ -189,17 +144,17 @@ class SellerServer:
 
 class SellerRequestHandler(BaseHTTPRequestHandler):
     def do_POST(self):
-        server=SellerServer()
+        server = SellerServer()
         
         customer_db_channel_list = []
         customer_db_stub_list = []
-        for host, port in CUSTOMER_DB_LIST:
+        for host, port in CUSTOMER_DB_LIST[:CUSTOMER_DB_N]:
             customer_db_channel_list.append(grpc.insecure_channel(host + ':' + port))
             customer_db_stub_list.append(seller_pb2_grpc.SellerStub(customer_db_channel_list[-1]))
 
         product_db_channel_list = []
         product_db_stub_list = []
-        for host, port in PRODUCT_DB_LIST:
+        for host, port in PRODUCT_DB_LIST[:PRODUCT_DB_N]:
             product_db_channel_list.append(grpc.insecure_channel(host + ':' + port))
             product_db_stub_list.append(seller_pb2_grpc.SellerStub(product_db_channel_list[-1]))
         
@@ -246,10 +201,16 @@ class SellerRequestHandler(BaseHTTPRequestHandler):
 
 def start_server(args):
     
-    # server = SellerServer()
-    # httpd = HTTPServer((SELLER_SERVER_HOST, SELLER_SERVER_PORT), SellerRequestHandler)
+    # node_id = args.node_id
+    # host, port = SELLER_SERVER_LIST[node_id]
+
+    # httpd = HTTPServer((host, int(port)), SellerRequestHandler)
+
     # print("=============================")
     # print("Server running")
+    # print("Server type: SELLER SERVER")
+    # print("node id:", node_id)
+    # print(host, port)
     # print("=============================")
 
     # httpd.serve_forever()
@@ -264,13 +225,13 @@ def start_server(args):
 
     customer_db_channel_list = []
     customer_db_stub_list = []
-    for host, port in CUSTOMER_DB_LIST:
+    for host, port in CUSTOMER_DB_LIST[:CUSTOMER_DB_N]:
         customer_db_channel_list.append(grpc.insecure_channel(host + ':' + port))
         customer_db_stub_list.append(seller_pb2_grpc.SellerStub(customer_db_channel_list[-1]))
 
     product_db_channel_list = []
     product_db_stub_list = []
-    for host, port in PRODUCT_DB_LIST:
+    for host, port in PRODUCT_DB_LIST[:PRODUCT_DB_N]:
         product_db_channel_list.append(grpc.insecure_channel(host + ':' + port))
         product_db_stub_list.append(seller_pb2_grpc.SellerStub(product_db_channel_list[-1]))
         

@@ -9,6 +9,9 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 
 from global_variables import *
 
+import random
+
+
 """
 generate stubs:
 
@@ -21,13 +24,8 @@ class BuyerServer:
 
     def create_buyer(self, request_json, customer_db_stub_list, product_db_stub_list):
 
-        # for now fix the node id to 0
-        node_id = 0
-        customer_db_stub = customer_db_stub_list[node_id]
-        product_db_stub = product_db_stub_list[node_id]
-
-        # customer_db_stub = random.choice(customer_db_stub_list)
-        # product_db_stub = random.choice(product_db_stub_list)
+        customer_db_stub = random.choice(customer_db_stub_list)
+        product_db_stub = random.choice(product_db_stub_list)
 
         user = ParseDict(request_json, buyer_pb2.BuyerUser())
         response = customer_db_stub.create_buyer(user)
@@ -36,13 +34,8 @@ class BuyerServer:
 
     def login_buyer(self, request_json, customer_db_stub_list, product_db_stub_list):
 
-        # for now fix the node id to 0
-        node_id = 0
-        customer_db_stub = customer_db_stub_list[node_id]
-        product_db_stub = product_db_stub_list[node_id]
-
-        # customer_db_stub = random.choice(customer_db_stub_list)
-        # product_db_stub = random.choice(product_db_stub_list)
+        customer_db_stub = random.choice(customer_db_stub_list)
+        product_db_stub = random.choice(product_db_stub_list)
 
         user = ParseDict(request_json, buyer_pb2.BuyerUser())
         response = customer_db_stub.login_buyer(user)
@@ -51,13 +44,8 @@ class BuyerServer:
         
     def logout_buyer(self, request_json, customer_db_stub_list, product_db_stub_list):
 
-        # for now fix the node id to 0
-        node_id = 0
-        customer_db_stub = customer_db_stub_list[node_id]
-        product_db_stub = product_db_stub_list[node_id]
-
-        # customer_db_stub = random.choice(customer_db_stub_list)
-        # product_db_stub = random.choice(product_db_stub_list)
+        customer_db_stub = random.choice(customer_db_stub_list)
+        product_db_stub = random.choice(product_db_stub_list)
 
         user = ParseDict(request_json, buyer_pb2.BuyerUser())
         response = customer_db_stub.logout_buyer(user)
@@ -66,13 +54,8 @@ class BuyerServer:
 
     def add_cart(self, request_json, customer_db_stub_list, product_db_stub_list):
 
-        # for now fix the node id to 0
-        node_id = 0
-        customer_db_stub = customer_db_stub_list[node_id]
-        product_db_stub = product_db_stub_list[node_id]
-
-        # customer_db_stub = random.choice(customer_db_stub_list)
-        # product_db_stub = random.choice(product_db_stub_list)
+        customer_db_stub = random.choice(customer_db_stub_list)
+        product_db_stub = random.choice(product_db_stub_list)
 
         login_status = self.check_buyer_login_status({'username' : request_json['username']}, 
                             customer_db_stub_list, product_db_stub_list)['success']        
@@ -87,13 +70,8 @@ class BuyerServer:
 
     def display_cart(self, request_json, customer_db_stub_list, product_db_stub_list):
 
-        # for now fix the node id to 0
-        node_id = 0
-        customer_db_stub = customer_db_stub_list[node_id]
-        product_db_stub = product_db_stub_list[node_id]
-
-        # customer_db_stub = random.choice(customer_db_stub_list)
-        # product_db_stub = random.choice(product_db_stub_list)
+        customer_db_stub = random.choice(customer_db_stub_list)
+        product_db_stub = random.choice(product_db_stub_list)
 
         login_status = self.check_buyer_login_status({'username' : request_json['username']}, 
                             customer_db_stub_list, product_db_stub_list)['success']        
@@ -108,13 +86,8 @@ class BuyerServer:
 
     def clear_cart(self, request_json, customer_db_stub_list, product_db_stub_list):
 
-        # for now fix the node id to 0
-        node_id = 0
-        customer_db_stub = customer_db_stub_list[node_id]
-        product_db_stub = product_db_stub_list[node_id]
-
-        # customer_db_stub = random.choice(customer_db_stub_list)
-        # product_db_stub = random.choice(product_db_stub_list)
+        customer_db_stub = random.choice(customer_db_stub_list)
+        product_db_stub = random.choice(product_db_stub_list)
 
         login_status = self.check_buyer_login_status({'username' : request_json['username']}, 
                             customer_db_stub_list, product_db_stub_list)['success']        
@@ -129,13 +102,8 @@ class BuyerServer:
 
     def remove_cart(self, request_json, customer_db_stub_list, product_db_stub_list):
         
-        # for now fix the node id to 0
-        node_id = 0
-        customer_db_stub = customer_db_stub_list[node_id]
-        product_db_stub = product_db_stub_list[node_id]
-
-        # customer_db_stub = random.choice(customer_db_stub_list)
-        # product_db_stub = random.choice(product_db_stub_list)
+        customer_db_stub = random.choice(customer_db_stub_list)
+        product_db_stub = random.choice(product_db_stub_list)
 
         login_status = self.check_buyer_login_status({'username' : request_json['username']}, 
                             customer_db_stub_list, product_db_stub_list)['success']  
@@ -150,13 +118,8 @@ class BuyerServer:
         
     def search(self, request_json, customer_db_stub_list, product_db_stub_list):
         
-        # for now fix the node id to 0
-        node_id = 0
-        customer_db_stub = customer_db_stub_list[node_id]
-        product_db_stub = product_db_stub_list[node_id]
-
-        # customer_db_stub = random.choice(customer_db_stub_list)
-        # product_db_stub = random.choice(product_db_stub_list)
+        customer_db_stub = random.choice(customer_db_stub_list)
+        product_db_stub = random.choice(product_db_stub_list)
 
         login_status = self.check_buyer_login_status({'username' : request_json['username']}, 
                             customer_db_stub_list, product_db_stub_list)['success']  
@@ -173,13 +136,8 @@ class BuyerServer:
     
     def get_purchase_history(self, request_json, customer_db_stub_list, product_db_stub_list):
 
-        # for now fix the node id to 0
-        node_id = 0
-        customer_db_stub = customer_db_stub_list[node_id]
-        product_db_stub = product_db_stub_list[node_id]
-
-        # customer_db_stub = random.choice(customer_db_stub_list)
-        # product_db_stub = random.choice(product_db_stub_list)
+        customer_db_stub = random.choice(customer_db_stub_list)
+        product_db_stub = random.choice(product_db_stub_list)
 
         login_status = self.check_buyer_login_status({'username' : request_json['username']}, 
                             customer_db_stub_list, product_db_stub_list)['success']  
@@ -194,13 +152,8 @@ class BuyerServer:
     
     def get_seller_rating(self, request_json, customer_db_stub_list, product_db_stub_list):
 
-        # for now fix the node id to 0
-        node_id = 0
-        customer_db_stub = customer_db_stub_list[node_id]
-        product_db_stub = product_db_stub_list[node_id]
-
-        # customer_db_stub = random.choice(customer_db_stub_list)
-        # product_db_stub = random.choice(product_db_stub_list)
+        customer_db_stub = random.choice(customer_db_stub_list)
+        product_db_stub = random.choice(product_db_stub_list)
 
         user = ParseDict(request_json, buyer_pb2.BuyerUser())
         response = customer_db_stub.get_seller_rating(user)
@@ -209,13 +162,8 @@ class BuyerServer:
 
     def check_buyer_login_status(self, request_json, customer_db_stub_list, product_db_stub_list):
 
-        # for now fix the node id to 0
-        node_id = 0
-        customer_db_stub = customer_db_stub_list[node_id]
-        product_db_stub = product_db_stub_list[node_id]
-
-        # customer_db_stub = random.choice(customer_db_stub_list)
-        # product_db_stub = random.choice(product_db_stub_list)
+        customer_db_stub = random.choice(customer_db_stub_list)
+        product_db_stub = random.choice(product_db_stub_list)
 
         user = ParseDict(request_json, buyer_pb2.BuyerUser())
         response = customer_db_stub.check_buyer_login_status(user)
@@ -226,14 +174,8 @@ class BuyerServer:
 
     def make_purchase(self, request_json, customer_db_stub_list, product_db_stub_list):
 
-        # for now fix the node id to 0
-        node_id = 0
-        customer_db_stub = customer_db_stub_list[node_id]
-        product_db_stub = product_db_stub_list[node_id]
-
-        # customer_db_stub = random.choice(customer_db_stub_list)
-        # product_db_stub = random.choice(product_db_stub_list)
-
+        customer_db_stub = random.choice(customer_db_stub_list)
+        product_db_stub = random.choice(product_db_stub_list)
 
         login_status = self.check_buyer_login_status({'username' : request_json['username']}, 
                             customer_db_stub_list, product_db_stub_list)['success']  
@@ -248,13 +190,13 @@ class BuyerServer:
 
         transaction_success = client.service.get_yes_or_no(creditcard, username)
 
-        #transaction_success = True
+        ### transaction_success = random.random() < 0.9
 
         if transaction_success:
             cart_request = {'username': request_json['username']}
             
-            cart_response = self.display_cart(cart_request, customer_db_stub, product_db_stub)
-            self.clear_cart(cart_request, customer_db_stub, product_db_stub)
+            cart_response = self.display_cart(cart_request, customer_db_stub_list, product_db_stub_list)
+            self.clear_cart(cart_request, customer_db_stub_list, product_db_stub_list)
 
             for prod_id, quantity in cart_response['cart'].items():
                 purchase_request = {'username': request_json['username'], 'prod_id': prod_id, 'quantity' : quantity}
@@ -274,8 +216,6 @@ class BuyerServer:
     
     
 
-
-
 class BuyerRequestHandler(BaseHTTPRequestHandler):
     def do_POST(self):
 
@@ -283,14 +223,14 @@ class BuyerRequestHandler(BaseHTTPRequestHandler):
 
         customer_db_channel_list = []
         customer_db_stub_list = []
-        for host, port in CUSTOMER_DB_LIST:
+        for host, port in CUSTOMER_DB_LIST[:CUSTOMER_DB_N]:
             customer_db_channel_list.append(grpc.insecure_channel(host + ':' + port))
             customer_db_stub_list.append(buyer_pb2_grpc.BuyerStub(customer_db_channel_list[-1]))
 
 
         product_db_channel_list = []
         product_db_stub_list = []
-        for host, port in PRODUCT_DB_LIST:
+        for host, port in PRODUCT_DB_LIST[:PRODUCT_DB_N]:
             product_db_channel_list.append(grpc.insecure_channel(host + ':' + port))
             product_db_stub_list.append(buyer_pb2_grpc.BuyerStub(product_db_channel_list[-1]))
 
@@ -342,222 +282,227 @@ class BuyerRequestHandler(BaseHTTPRequestHandler):
 
 def start_server(args):
 
+    # node_id = args.node_id
+    # host, port = BUYER_SERVER_LIST[node_id]
+
+    # httpd = HTTPServer((host, int(port)), BuyerRequestHandler)
+    # print("=============================")
+    # print("Server running")
+    # print("Server type: BUYER SERVER")
+    # print("node id:", node_id)
+    # print(host, port)
+    # print("=============================")
+
+    # httpd.serve_forever()
+    
+    # print("=============================")
+    # print("Server shutdown")
+    # print("=============================")
+
+
+
     server = BuyerServer()
-    httpd = HTTPServer((BUYER_SERVER_HOST, BUYER_SERVER_PORT), BuyerRequestHandler)
-    print("=============================")
-    print("Server running")
-    print("=============================")
-
-    httpd.serve_forever()
     
-    print("=============================")
-    print("Server shutdown")
-    print("=============================")
+    customer_db_channel_list = []
+    customer_db_stub_list = []
+    for host, port in CUSTOMER_DB_LIST[:CUSTOMER_DB_N]:
+        customer_db_channel_list.append(grpc.insecure_channel(host + ':' + port))
+        customer_db_stub_list.append(buyer_pb2_grpc.BuyerStub(customer_db_channel_list[-1]))
 
-
-
-    # server=BuyerServer()
-    
-    # customer_db_channel_list = []
-    # customer_db_stub_list = []
-    # for host, port in CUSTOMER_DB_LIST:
-    #     customer_db_channel_list.append(grpc.insecure_channel(host + ':' + port))
-    #     customer_db_stub_list.append(buyer_pb2_grpc.BuyerStub(customer_db_channel_list[-1]))
-
-    # product_db_channel_list = []
-    # product_db_stub_list = []
-    # for host, port in PRODUCT_DB_LIST:
-    #     product_db_channel_list.append(grpc.insecure_channel(host + ':' + port))
-    #     product_db_stub_list.append(buyer_pb2_grpc.BuyerStub(product_db_channel_list[-1]))
+    product_db_channel_list = []
+    product_db_stub_list = []
+    for host, port in PRODUCT_DB_LIST[:PRODUCT_DB_N]:
+        product_db_channel_list.append(grpc.insecure_channel(host + ':' + port))
+        product_db_stub_list.append(buyer_pb2_grpc.BuyerStub(product_db_channel_list[-1]))
         
 
-    # add_dummy_data(server, customer_db_stub_list, product_db_stub_list)
+    add_dummy_data(server, customer_db_stub_list, product_db_stub_list)
 
 
 
 
 
-##########################################################################
-# Testing functions
-##########################################################################
+#########################################################################
+#### Testing functions
+#########################################################################
 
 
-##########################################################################
+#########################################################################
 
-# def add_dummy_data(server, customer_db_stub, product_db_stub):
+def add_dummy_data(server, customer_db_stub, product_db_stub):
 
-#     print("=============================")
+    print("=============================")
 
-#     request = {"action": "create_buyer", 
-#                "username": "usr1",
-#                "password": "pw1",
-#                "name" : "name1",
-#                }
-
-
-#     action = request.get("action")
-#     print(action)
-#     response = handle_request(server, request, customer_db_stub, product_db_stub)
-#     print(type(response))
-#     print(response)
-
-#     print("=============================")
-
-#     request = {"action": "create_buyer", 
-#                "username": "usr2",
-#                "password": "pw2",
-#                "name" : "name2",
-#                }
+    request = {"action": "create_buyer", 
+               "username": "usr1",
+               "password": "pw1",
+               "name" : "name1",
+               }
 
 
-#     action = request.get("action")
-#     print(action)
-#     response = handle_request(server, request, customer_db_stub, product_db_stub)
-#     print(type(response))
-#     print(response)
+    action = request.get("action")
+    print(action)
+    response = handle_request(server, request, customer_db_stub, product_db_stub)
+    print(type(response))
+    print(response)
 
-#     print("=============================")
+    print("=============================")
 
-#     request = {"action": "create_buyer", 
-#                "username": "usr2",
-#                "password": "pw2",
-#                "name" : "name2",
-#                }
-
-#     action = request.get("action")
-#     print(action)
-#     response = handle_request(server, request, customer_db_stub, product_db_stub)
-#     print(type(response))
-#     print(response)
+    request = {"action": "create_buyer", 
+               "username": "usr2",
+               "password": "pw2",
+               "name" : "name2",
+               }
 
 
+    action = request.get("action")
+    print(action)
+    response = handle_request(server, request, customer_db_stub, product_db_stub)
+    print(type(response))
+    print(response)
 
-#     print("=============================")
+    print("=============================")
 
-#     request = {"action": "login_buyer", 
-#                "username": "usr1",
-#                "password": "pw1",
-#                "name" : "name2",
-#                }
+    request = {"action": "create_buyer", 
+               "username": "usr2",
+               "password": "pw2",
+               "name" : "name2",
+               }
 
-#     action = request.get("action")
-#     print(action)
-#     response = handle_request(server, request, customer_db_stub, product_db_stub)
-#     print(type(response))
-#     print(response)
+    action = request.get("action")
+    print(action)
+    response = handle_request(server, request, customer_db_stub, product_db_stub)
+    print(type(response))
+    print(response)
 
 
 
-#     print("=============================")
+    print("=============================")
 
-#     request = {"action": "login_buyer", 
-#                "username": "usr2",
-#                "password": "pw2",
-#                "name" : "name2",
-#                }
+    request = {"action": "login_buyer", 
+               "username": "usr1",
+               "password": "pw1",
+               "name" : "name2",
+               }
 
-#     action = request.get("action")
-#     print(action)
-#     response = handle_request(server, request, customer_db_stub, product_db_stub)
-#     print(type(response))
-#     print(response)
-
-
-
-#     print("=============================")
-
-#     request = {"action": "add_to_cart",
-#                "username": "usr2", 
-#                "prod_id": 1,
-#                "quantity": 2,
-#                }
-
-#     action = request.get("action")
-#     print(action)
-#     response = handle_request(server, request, customer_db_stub, product_db_stub)
-#     print(type(response))
-#     print(response)
+    action = request.get("action")
+    print(action)
+    response = handle_request(server, request, customer_db_stub, product_db_stub)
+    print(type(response))
+    print(response)
 
 
 
-#     print("=============================")
+    print("=============================")
 
-#     request = {"action": "add_to_cart",
-#                "username": "usr2", 
-#                "prod_id": 2,
-#                "quantity": 2,
-#                }
+    request = {"action": "login_buyer", 
+               "username": "usr2",
+               "password": "pw2",
+               "name" : "name2",
+               }
 
-
-#     action = request.get("action")
-#     print(action)
-#     response = handle_request(server, request, customer_db_stub, product_db_stub)
-#     print(type(response))
-#     print(response)
-
-
-
-#     print("=============================")
-
-#     request = {"action": "make_purchase", 
-#                "username": "usr2",
-#                "creditcard": "123456789",
-#                }
-
- 
-#     action = request.get("action")
-#     print(action)
-#     response = handle_request(server, request, customer_db_stub, product_db_stub)
-#     print(type(response))
-#     print(response)
+    action = request.get("action")
+    print(action)
+    response = handle_request(server, request, customer_db_stub, product_db_stub)
+    print(type(response))
+    print(response)
 
 
 
-#     print("=============================")
+    print("=============================")
 
-#     request = {"action": "get_purchase_history", 
-#                "username": "usr2",
-#                }
+    request = {"action": "add_to_cart",
+               "username": "usr2", 
+               "prod_id": 1,
+               "quantity": 2,
+               }
+
+    action = request.get("action")
+    print(action)
+    response = handle_request(server, request, customer_db_stub, product_db_stub)
+    print(type(response))
+    print(response)
+
+
+
+    print("=============================")
+
+    request = {"action": "add_to_cart",
+               "username": "usr2", 
+               "prod_id": 2,
+               "quantity": 2,
+               }
+
+
+    action = request.get("action")
+    print(action)
+    response = handle_request(server, request, customer_db_stub, product_db_stub)
+    print(type(response))
+    print(response)
+
+
+
+    print("=============================")
+
+    request = {"action": "make_purchase", 
+               "username": "usr2",
+               "creditcard": "123456789",
+               }
 
  
-#     action = request.get("action")
-#     print(action)
-#     response = handle_request(server, request, customer_db_stub, product_db_stub)
-#     print(type(response))
-#     print(response)
+    action = request.get("action")
+    print(action)
+    response = handle_request(server, request, customer_db_stub, product_db_stub)
+    print(type(response))
+    print(response)
 
 
-# ## FOR TESTING ONLY
-# def handle_request(server, request, customer_db_stub, product_db_stub):
 
-#     action = request.get("action")
-#     request.pop("action")
-#     if action == "create_buyer":
-#         response = server.create_buyer(request, customer_db_stub, product_db_stub)
-#     elif action == "login_buyer":
-#         response = server.login_buyer(request, customer_db_stub, product_db_stub)
-#     elif action == "logout_buyer":
-#         response = server.logout_buyer(request, customer_db_stub, product_db_stub)
-#     elif action == "add_to_cart":
-#         response = server.add_cart(request, customer_db_stub, product_db_stub)
-#     elif action == "remove_cart":
-#         response = server.remove_cart(request, customer_db_stub, product_db_stub)
-#     elif action == "display_cart":
-#         response = server.display_cart(request, customer_db_stub, product_db_stub)
-#     elif action == "clear_cart":
-#         response = server.clear_cart(request, customer_db_stub, product_db_stub)    
-#     elif action == "search":
-#         response = server.search(request, customer_db_stub, product_db_stub)
-#     elif action == "get_purchase_history":
-#         response = server.get_purchase_history(request, customer_db_stub, product_db_stub)
-#     elif action == "get_seller_rating":
-#         response = server.get_seller_rating(request, customer_db_stub, product_db_stub)
-#     elif action == "make_purchase":
-#         response = server.make_purchase(request, customer_db_stub, product_db_stub)
-#     else:
-#         response = {"success": False, "message": "Invalid action"}
+    print("=============================")
+
+    request = {"action": "get_purchase_history", 
+               "username": "usr2",
+               }
+
+ 
+    action = request.get("action")
+    print(action)
+    response = handle_request(server, request, customer_db_stub, product_db_stub)
+    print(type(response))
+    print(response)
+
+
+## FOR TESTING ONLY
+def handle_request(server, request, customer_db_stub, product_db_stub):
+
+    action = request.get("action")
+    request.pop("action")
+    if action == "create_buyer":
+        response = server.create_buyer(request, customer_db_stub, product_db_stub)
+    elif action == "login_buyer":
+        response = server.login_buyer(request, customer_db_stub, product_db_stub)
+    elif action == "logout_buyer":
+        response = server.logout_buyer(request, customer_db_stub, product_db_stub)
+    elif action == "add_to_cart":
+        response = server.add_cart(request, customer_db_stub, product_db_stub)
+    elif action == "remove_cart":
+        response = server.remove_cart(request, customer_db_stub, product_db_stub)
+    elif action == "display_cart":
+        response = server.display_cart(request, customer_db_stub, product_db_stub)
+    elif action == "clear_cart":
+        response = server.clear_cart(request, customer_db_stub, product_db_stub)    
+    elif action == "search":
+        response = server.search(request, customer_db_stub, product_db_stub)
+    elif action == "get_purchase_history":
+        response = server.get_purchase_history(request, customer_db_stub, product_db_stub)
+    elif action == "get_seller_rating":
+        response = server.get_seller_rating(request, customer_db_stub, product_db_stub)
+    elif action == "make_purchase":
+        response = server.make_purchase(request, customer_db_stub, product_db_stub)
+    else:
+        response = {"success": False, "message": "Invalid action"}
         
-#     return response
+    return response
 
 
 

@@ -210,7 +210,7 @@ class AtomicBroadcaster:
 
         self.server_id = id
 
-        self.node_list = node_list[:3] ############
+        self.node_list = node_list
 
         self.num_nodes = len(self.node_list)
         
@@ -279,7 +279,9 @@ class AtomicBroadcaster:
         ### simulate packet loss ###
         loss_ratio = 0.2
         if random.random() < loss_ratio:
+            print("!" * 30)
             print("DISCARDING PACKET")
+            print("!" * 30)
             raise TimeoutError
 
 
@@ -452,11 +454,6 @@ class AtomicBroadcaster:
 
 
     def consensus(self):
-        
-        ##### only keep this in the final consensus() fn
-
-        ### keep sending / recieving requests until all msgs received
-
 
         consensus_reached = False
         
@@ -493,7 +490,6 @@ class AtomicBroadcaster:
                 
                 print("consensus reached ", self.server_id)
                 
-
                 print("@" * 30)
 
                 consensus_reached = True
@@ -502,32 +498,6 @@ class AtomicBroadcaster:
 
 
             ###### send msgs ######
-
-            """
-            
-            need all req msg and seq msgs for all seq num < k
-
-            need all req - seq corresponding msgs
-
-            """
-            # deal with missing msgs
-
-            # get missing msgs from prev node for msg < k
-            # could also be next nodes ? dont care about them , prev node assigns global seq num
-
-
-            # get seq msg for coresponding req msg
-            # get req msg for coresponding seq msg
-            
-
-            # all in a set 'missing_msgs'
-            # no consensus until len(missing_msgs) = 0
-            # max_global_seq > local seq num
-
-
-            ## ask prev_node about all msgs < k 
-            # # could also be next nodes ? dont care about them , prev node assigns global seq num
-
 
             assert self.seq_num_iter < self.max_global_seq_num or len(self.curr_req_msg) > 0, 'seq_msg_iter >= max_global_seq_num'
 
@@ -597,18 +567,14 @@ class AtomicBroadcaster:
                     else:
                         # send the msg to sender
                         self.broadcast_retransmission_msg(next_msg_id, None, 'sequence_msg')
+             
                                                      
-
-                    ### send a retransmission seq msg
-
-
-
             ## too many msgs and too slow ... fix it
                     
 
             # if we have req msg with no global seq then keep sending it until we get global seq
             
-            time.sleep(0.3) #### ++++++++++++++++++++++++++++++++++++++++++++++
+            time.sleep(RECEIVE_LOOP_DELAY) #### ++++++++++++++++++++++++++++++++++++++++++++++
 
             ###### receive and process msgs ######
             for _ in range(3):
@@ -664,9 +630,42 @@ class AtomicBroadcaster:
             elif func_name == 'check_seller_login_status':
                 response_dict = db.check_seller_login_status(request.username)
 
-            elif func_name == 'login_seller':
-                pass
+            elif func_name == 'get_seller_rating':
+                response_dict = db.get_seller_rating(request.username)
+            
+            elif func_name == 'create_buyer':
+                response_dict = db.create_buyer(request.username, request.password, request.name)
 
+            elif func_name == 'login_buyer':
+                response_dict = db.login_buyer(request.username, request.password)
+
+            elif func_name == 'logout_buyer':
+                response_dict = db.logout_buyer(request.username)
+
+            elif func_name == 'add_cart':
+                response_dict = db.add_cart(request.username, request.prod_id, request.quantity)
+
+            elif func_name == 'remove_cart':
+                response_dict = db.remove_cart(request.username, request.prod_id, request.quantity)
+
+            elif func_name == 'clear_cart':
+                response_dict = db.clear_cart(request.username)
+
+            elif func_name == 'display_cart':
+                response_dict = db.display_cart(request.username)
+
+            elif func_name == 'add_purchase':
+                response_dict = db.add_purchase(request.username, request.prod_id, request.quantity)
+
+            elif func_name == 'get_purchase_history':
+                response_dict = db.get_purchase_history(request.username)
+            
+            elif func_name == 'get_seller_rating':
+                response_dict = db.get_seller_rating(request.username)
+
+            elif func_name == 'check_buyer_login_status':
+                response_dict = db.check_buyer_login_status(request.username)
+                
             else:
                 NotImplementedError
 
@@ -697,19 +696,12 @@ class AtomicBroadcaster:
 
 
 
-
-
 class SellerServicer(seller_pb2_grpc.SellerServicer):
     def __init__(self, db, atomic_broadcaster):
         self.db = db
         self.atomic_broadcaster = atomic_broadcaster
     
     def create_seller(self, request, context):
-
-        ## communicate and figure out all the sequences 
-        ## apply them
-        ## apply this request
-
 
         func_name = 'create_seller'
         
@@ -729,8 +721,6 @@ class SellerServicer(seller_pb2_grpc.SellerServicer):
         self.atomic_broadcaster.lock.release()
 
 
-        # response_dict = self.db.create_seller(request.username, request.password, request.name)
-
 
         response = ParseDict(response_dict, seller_pb2.SellerResponse())
         return response
@@ -740,7 +730,6 @@ class SellerServicer(seller_pb2_grpc.SellerServicer):
     def login_seller(self, request, context):
 
         func_name = 'login_seller'
-        
         
         self.atomic_broadcaster.lock.acquire()
 
@@ -753,12 +742,9 @@ class SellerServicer(seller_pb2_grpc.SellerServicer):
 
         response_dict = self.atomic_broadcaster.deliver_requests(self.db, rpc_return_msg_id)
 
-
         print("+" * 60)
 
         self.atomic_broadcaster.lock.release()
-
-        # response_dict = self.db.login_seller(request.username, request.password)
 
 
         response = ParseDict(response_dict, seller_pb2.SellerResponse())
@@ -785,9 +771,6 @@ class SellerServicer(seller_pb2_grpc.SellerServicer):
         self.atomic_broadcaster.lock.release()
 
 
-        # response_dict = self.db.logout_seller(request.username)
-
-
         response = ParseDict(response_dict, seller_pb2.SellerResponse())
         return response
     
@@ -795,10 +778,23 @@ class SellerServicer(seller_pb2_grpc.SellerServicer):
     def get_seller_rating(self, request, context):
 
         func_name = 'get_seller_rating'
-        request_list = self.atomic_broadcaster.consensus(request, func_name)
+        
+        self.atomic_broadcaster.lock.acquire()
+
+        print("+" * 60)
+
+        # broadcast the message and start consensus protocol
+        rpc_return_msg_id = self.atomic_broadcaster.propose_new_req(request, func_name)
+
+        self.atomic_broadcaster.consensus()
+
+        response_dict = self.atomic_broadcaster.deliver_requests(self.db, rpc_return_msg_id)
+
+        print("+" * 60)
+
+        self.atomic_broadcaster.lock.release()
 
 
-        response_dict = self.db.get_seller_rating(request.username)
         response = ParseDict(response_dict, seller_pb2.SellerRating())
         return response
 
@@ -822,9 +818,6 @@ class SellerServicer(seller_pb2_grpc.SellerServicer):
         self.atomic_broadcaster.lock.release()
 
 
-        # response_dict = self.db.check_seller_login_status(request.username)
-
-
         response = ParseDict(response_dict, seller_pb2.SellerResponse())
         return response
 
@@ -837,111 +830,259 @@ class BuyerServicer(buyer_pb2_grpc.BuyerServicer):
     def create_buyer(self, request, context):
 
         func_name = 'create_buyer'
-        request_list = self.atomic_broadcaster.consensus(request, func_name)
+        
+        self.atomic_broadcaster.lock.acquire()
+
+        print("+" * 60)
+
+        # broadcast the message and start consensus protocol
+        rpc_return_msg_id = self.atomic_broadcaster.propose_new_req(request, func_name)
+
+        self.atomic_broadcaster.consensus()
+
+        response_dict = self.atomic_broadcaster.deliver_requests(self.db, rpc_return_msg_id)
+
+        print("+" * 60)
+
+        self.atomic_broadcaster.lock.release()
 
 
-        response_json = self.db.create_buyer(request.username, request.password, request.name)
-        response = ParseDict(response_json, buyer_pb2.BuyerResponse())
+        response = ParseDict(response_dict, buyer_pb2.BuyerResponse())
         return response
     
     def login_buyer(self, request, context):
         
         func_name = 'login_buyer'
-        request_list = self.atomic_broadcaster.consensus(request, func_name)
+        
+        self.atomic_broadcaster.lock.acquire()
+
+        print("+" * 60)
+
+        # broadcast the message and start consensus protocol
+        rpc_return_msg_id = self.atomic_broadcaster.propose_new_req(request, func_name)
+
+        self.atomic_broadcaster.consensus()
+
+        response_dict = self.atomic_broadcaster.deliver_requests(self.db, rpc_return_msg_id)
+
+        print("+" * 60)
+
+        self.atomic_broadcaster.lock.release()
 
 
-        response_json = self.db.login_buyer(request.username, request.password)
-        response = ParseDict(response_json, buyer_pb2.BuyerResponse())
+        response = ParseDict(response_dict, buyer_pb2.BuyerResponse())
         return response
     
     def logout_buyer(self, request, context):
 
         func_name = 'logout_buyer'
-        request_list = self.atomic_broadcaster.consensus(request, func_name)
+        
+        self.atomic_broadcaster.lock.acquire()
 
+        print("+" * 60)
 
-        response_json = self.db.logout_buyer(request.username)
-        response = ParseDict(response_json, buyer_pb2.BuyerResponse())
+        # broadcast the message and start consensus protocol
+        rpc_return_msg_id = self.atomic_broadcaster.propose_new_req(request, func_name)
+
+        self.atomic_broadcaster.consensus()
+
+        response_dict = self.atomic_broadcaster.deliver_requests(self.db, rpc_return_msg_id)
+
+        print("+" * 60)
+
+        self.atomic_broadcaster.lock.release()
+
+        
+        response = ParseDict(response_dict, buyer_pb2.BuyerResponse())
         return response
 
     def add_cart(self, request, context):
 
         func_name = 'add_cart'
-        request_list = self.atomic_broadcaster.consensus(request, func_name)
+        
+        self.atomic_broadcaster.lock.acquire()
+
+        print("+" * 60)
+
+        # broadcast the message and start consensus protocol
+        rpc_return_msg_id = self.atomic_broadcaster.propose_new_req(request, func_name)
+
+        self.atomic_broadcaster.consensus()
+
+        response_dict = self.atomic_broadcaster.deliver_requests(self.db, rpc_return_msg_id)
+
+        print("+" * 60)
+
+        self.atomic_broadcaster.lock.release()
 
 
-        response_json = self.db.add_cart(request.username, request.prod_id, request.quantity)
-        response = ParseDict(response_json, buyer_pb2.BuyerResponse())
+        response = ParseDict(response_dict, buyer_pb2.BuyerResponse())
         return response
     
     def remove_cart(self, request, context):
 
         func_name = 'remove_cart'
-        request_list = self.atomic_broadcaster.consensus(request, func_name)
+        
+        self.atomic_broadcaster.lock.acquire()
+
+        print("+" * 60)
+
+        # broadcast the message and start consensus protocol
+        rpc_return_msg_id = self.atomic_broadcaster.propose_new_req(request, func_name)
+
+        self.atomic_broadcaster.consensus()
+
+        response_dict = self.atomic_broadcaster.deliver_requests(self.db, rpc_return_msg_id)
+
+        print("+" * 60)
+
+        self.atomic_broadcaster.lock.release()
 
 
-        response_json = self.db.remove_cart(request.username, request.prod_id, request.quantity)
-        response = ParseDict(response_json, buyer_pb2.BuyerResponse())
+        response = ParseDict(response_dict, buyer_pb2.BuyerResponse())
         return response
 
     def clear_cart(self, request, context):
 
         func_name = 'clear_cart'
-        request_list = self.atomic_broadcaster.consensus(request, func_name)
+        
+
+        self.atomic_broadcaster.lock.acquire()
+
+        print("+" * 60)
+
+        # broadcast the message and start consensus protocol
+        rpc_return_msg_id = self.atomic_broadcaster.propose_new_req(request, func_name)
+
+        self.atomic_broadcaster.consensus()
+
+        response_dict = self.atomic_broadcaster.deliver_requests(self.db, rpc_return_msg_id)
+
+        print("+" * 60)
+
+        self.atomic_broadcaster.lock.release()
 
 
-        response_json = self.db.clear_cart(request.username)
-        response = ParseDict(response_json, buyer_pb2.BuyerResponse())
+        response = ParseDict(response_dict, buyer_pb2.BuyerResponse())
         return response
     
     def display_cart(self, request, context):
 
         func_name = 'display_cart'
-        request_list = self.atomic_broadcaster.consensus(request, func_name)
+        
+
+        self.atomic_broadcaster.lock.acquire()
+
+        print("+" * 60)
+
+        # broadcast the message and start consensus protocol
+        rpc_return_msg_id = self.atomic_broadcaster.propose_new_req(request, func_name)
+
+        self.atomic_broadcaster.consensus()
+
+        response_dict = self.atomic_broadcaster.deliver_requests(self.db, rpc_return_msg_id)
+
+        print("+" * 60)
+
+        self.atomic_broadcaster.lock.release()
 
 
-        response_json = self.db.display_cart(request.username)
-        response = ParseDict(response_json, buyer_pb2.CartResponse())
+        response = ParseDict(response_dict, buyer_pb2.CartResponse())
         return response
     
     def add_purchase(self, request, context):
 
         func_name = 'add_purchase'
-        request_list = self.atomic_broadcaster.consensus(request, func_name)
+        
+
+        self.atomic_broadcaster.lock.acquire()
+
+        print("+" * 60)
+
+        # broadcast the message and start consensus protocol
+        rpc_return_msg_id = self.atomic_broadcaster.propose_new_req(request, func_name)
+
+        self.atomic_broadcaster.consensus()
+
+        response_dict = self.atomic_broadcaster.deliver_requests(self.db, rpc_return_msg_id)
+
+        print("+" * 60)
+
+        self.atomic_broadcaster.lock.release()
 
 
-        response_json = self.db.add_purchase(request.username, request.prod_id, request.quantity)
-        response = ParseDict(response_json, buyer_pb2.BuyerResponse())
+        response = ParseDict(response_dict, buyer_pb2.BuyerResponse())
         return response
     
     def get_purchase_history(self, request, context):
 
         func_name = 'get_purchase_history'
-        request_list = self.atomic_broadcaster.consensus(request, func_name)
+        
+
+        self.atomic_broadcaster.lock.acquire()
+
+        print("+" * 60)
+
+        # broadcast the message and start consensus protocol
+        rpc_return_msg_id = self.atomic_broadcaster.propose_new_req(request, func_name)
+
+        self.atomic_broadcaster.consensus()
+
+        response_dict = self.atomic_broadcaster.deliver_requests(self.db, rpc_return_msg_id)
+
+        print("+" * 60)
+
+        self.atomic_broadcaster.lock.release()
 
 
-        response_json = self.db.get_purchase_history(request.username)
-        response = ParseDict(response_json, buyer_pb2.BuyerHistory())
+        response = ParseDict(response_dict, buyer_pb2.BuyerHistory())
         return response
 
     def get_seller_rating(self, request, context):
 
         func_name = 'get_seller_rating'
-        request_list = self.atomic_broadcaster.consensus(request, func_name)
+        
+        self.atomic_broadcaster.lock.acquire()
+
+        print("+" * 60)
+
+        # broadcast the message and start consensus protocol
+        rpc_return_msg_id = self.atomic_broadcaster.propose_new_req(request, func_name)
+
+        self.atomic_broadcaster.consensus()
+
+        response_dict = self.atomic_broadcaster.deliver_requests(self.db, rpc_return_msg_id)
+
+        print("+" * 60)
+
+        self.atomic_broadcaster.lock.release()
 
 
-        response_dict = self.db.get_seller_rating(request.username)
         response = ParseDict(response_dict, buyer_pb2.BuyerSellerRating())
         return response
     
     def check_buyer_login_status(self, request, context):
 
         func_name = 'check_buyer_login_status'
-        request_list = self.atomic_broadcaster.consensus(request, func_name)
+        
+
+        self.atomic_broadcaster.lock.acquire()
+
+        print("+" * 60)
+
+        # broadcast the message and start consensus protocol
+        rpc_return_msg_id = self.atomic_broadcaster.propose_new_req(request, func_name)
+
+        self.atomic_broadcaster.consensus()
+
+        response_dict = self.atomic_broadcaster.deliver_requests(self.db, rpc_return_msg_id)
+
+        print("+" * 60)
+
+        self.atomic_broadcaster.lock.release()
 
 
-        response_json = self.db.check_buyer_login_status(request.username)
-        response = ParseDict(response_json, buyer_pb2.BuyerResponse())
+        response = ParseDict(response_dict, buyer_pb2.BuyerResponse())
         return response
     
 
@@ -949,6 +1090,9 @@ class BuyerServicer(buyer_pb2_grpc.BuyerServicer):
 def start_server(args):
 
     node_id = args.node_id
+    
+    assert node_id < CUSTOMER_DB_N, 'max node id CUSTOMER_DB_N - 1'
+
     host, port = CUSTOMER_DB_LIST[node_id]
 
     print("=============================")
@@ -962,7 +1106,9 @@ def start_server(args):
 
     # initialize db and server
     db = DBServer()
-    atomic_broadcaster = AtomicBroadcaster(node_id, CUSTOMER_DB_LIST)
+
+
+    atomic_broadcaster = AtomicBroadcaster(node_id, CUSTOMER_DB_LIST[:CUSTOMER_DB_N])
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=CUSTOMER_DB_MAX_WORKERS))
 
     # add services to server
@@ -973,8 +1119,6 @@ def start_server(args):
     server.add_insecure_port(host + ':' + port)
     server.start()
     
-    simulate_failure = False
-    failure_nodes = {0, 1}
 
     while True:
         
@@ -1004,35 +1148,12 @@ def start_server(args):
             
             print("In Main while loop exception occurred: ", e)
 
-            if simulate_failure:
-                print("+" * 60)
-                
-                if atomic_broadcaster.server_id in failure_nodes:
-                    
-                    if atomic_broadcaster.local_seq_num > 3:
-
-                        print("Simulating Transient Failure ... ")
-                        print("node id: ", atomic_broadcaster.server_id)
-                        
-                        for _ in range(10):
-                            try:
-                                msg, node_id = atomic_broadcaster.recv_message()
-                                print("discarding msg")
-
-                            except Exception as e:
-                                print("no msg")
-
-
-                        time.sleep(5)
-                        simulate_failure = False # only run this once
-
-
             print("+" * 60)
             
             atomic_broadcaster.lock.release()
             
 
-            time.sleep(WHILE_LOOP_DELAY)
+            time.sleep(RECEIVE_LOOP_DELAY)
 
             continue
 
