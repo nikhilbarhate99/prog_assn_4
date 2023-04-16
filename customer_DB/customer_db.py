@@ -8,6 +8,7 @@ import socket
 import pickle
 
 import threading
+import random
 
 from grpc_files import seller_pb2
 from grpc_files import seller_pb2_grpc
@@ -273,11 +274,21 @@ class AtomicBroadcaster:
 
     def recv_message(self):
         msg, addr = self.sock.recvfrom(UDP_PACKET_SIZE)
+
+
+        ### simulate packet loss ###
+        loss_ratio = 0.2
+        if random.random() < loss_ratio:
+            print("DISCARDING PACKET")
+            raise TimeoutError
+
+
         msg = pickle.loads(msg)
         # get node id from address
         node_id = self.node_list.index((addr[0], str(addr[1])))
         return msg, node_id
     
+
     def broadcast_message(self, msg):
         # set meta data
         msg = self.add_meta_data_to_msg(msg)
@@ -326,6 +337,13 @@ class AtomicBroadcaster:
                                                ret_msg_seq_num,
                                                ret_msg_type)
         self.send_message(retransmit_msg, recv_node_id)
+
+    def broadcast_retransmission_msg(self, msg_id, ret_msg_seq_num, ret_msg_type):
+        retransmit_msg = RetransmissionMessage(self.server_id, 
+                                               msg_id,
+                                               ret_msg_seq_num,
+                                               ret_msg_type)
+        self.broadcast_message(retransmit_msg)
 
     def get_seq_num_assigner_id(self, id):
         return id % self.num_nodes
@@ -566,33 +584,44 @@ class AtomicBroadcaster:
                 
                 elif len(req_msg_w_no_seq) > 0:
                     # get msg from buffer
-                    node, local_seq_num = next(iter(req_msg_w_no_seq))
-                    ret_msg = self.request_msg_buffer[node][local_seq_num]
-                    # send the msg to sender
-                    self.broadcast_message(ret_msg)
-                    time.sleep(0.5)
+                    next_msg_id = next(iter(req_msg_w_no_seq))
+                    node, local_seq_num = next_msg_id
                     
+                    # send request msg
+                    if random.random() < 0.5:
+                        # send the msg to sender
+                        ret_msg = self.request_msg_buffer[node][local_seq_num]
+                        self.broadcast_message(ret_msg)
+                    
+                    # ask for seq msg
+                    else:
+                        # send the msg to sender
+                        self.broadcast_retransmission_msg(next_msg_id, None, 'sequence_msg')
+                                                     
+
+                    ### send a retransmission seq msg
 
 
+
+            ## too many msgs and too slow ... fix it
+                    
 
             # if we have req msg with no global seq then keep sending it until we get global seq
             
-
+            time.sleep(0.3) #### ++++++++++++++++++++++++++++++++++++++++++++++
 
             ###### receive and process msgs ######
-            try:
-                msg, node_id = self.recv_message()
-                self.process_message(msg, node_id)
+            for _ in range(3):
+                try:
+                    msg, node_id = self.recv_message()
+                    self.process_message(msg, node_id)
 
-            except Exception as e:
-                print("In Consensus while loop exception occurred: ", e)
-                pass
+                except Exception as e:
+                    print("In Consensus while loop exception occurred: ", e)
+                    pass
 
             
 
-
-
-        
         # clear current not delivered messages buffers
         self.curr_req_msg.clear()
         self.curr_seq_msg.clear()
@@ -600,7 +629,7 @@ class AtomicBroadcaster:
         return
 
     
-    def deliver_requests(self, db, curr_msg_id):
+    def deliver_requests(self, db, rpc_return_msg_id):
         
         curr_response_dict = None
 
@@ -650,7 +679,7 @@ class AtomicBroadcaster:
 
 
             # keep current response_dict to return 
-            if curr_msg_id is not None and msg_id == curr_msg_id:
+            if rpc_return_msg_id is not None and msg_id == rpc_return_msg_id:
                 curr_response_dict = response_dict
         
 
@@ -689,11 +718,11 @@ class SellerServicer(seller_pb2_grpc.SellerServicer):
         print("+" * 60)
 
         # broadcast the message and start consensus protocol
-        curr_msg_id = self.atomic_broadcaster.propose_new_req(request, func_name)
+        rpc_return_msg_id = self.atomic_broadcaster.propose_new_req(request, func_name)
 
         self.atomic_broadcaster.consensus()
 
-        response_dict = self.atomic_broadcaster.deliver_requests(self.db, curr_msg_id)
+        response_dict = self.atomic_broadcaster.deliver_requests(self.db, rpc_return_msg_id)
 
         print("+" * 60)
 
@@ -718,11 +747,11 @@ class SellerServicer(seller_pb2_grpc.SellerServicer):
         print("+" * 60)
 
         # broadcast the message and start consensus protocol
-        curr_msg_id = self.atomic_broadcaster.propose_new_req(request, func_name)
+        rpc_return_msg_id = self.atomic_broadcaster.propose_new_req(request, func_name)
 
         self.atomic_broadcaster.consensus()
 
-        response_dict = self.atomic_broadcaster.deliver_requests(self.db, curr_msg_id)
+        response_dict = self.atomic_broadcaster.deliver_requests(self.db, rpc_return_msg_id)
 
 
         print("+" * 60)
@@ -745,11 +774,11 @@ class SellerServicer(seller_pb2_grpc.SellerServicer):
         print("+" * 60)
 
         # broadcast the message and start consensus protocol
-        curr_msg_id = self.atomic_broadcaster.propose_new_req(request, func_name)
+        rpc_return_msg_id = self.atomic_broadcaster.propose_new_req(request, func_name)
 
         self.atomic_broadcaster.consensus()
 
-        response_dict = self.atomic_broadcaster.deliver_requests(self.db, curr_msg_id)
+        response_dict = self.atomic_broadcaster.deliver_requests(self.db, rpc_return_msg_id)
 
         print("+" * 60)
 
@@ -782,11 +811,11 @@ class SellerServicer(seller_pb2_grpc.SellerServicer):
         print("+" * 60)
 
         # broadcast the message and start consensus protocol
-        curr_msg_id = self.atomic_broadcaster.propose_new_req(request, func_name)
+        rpc_return_msg_id = self.atomic_broadcaster.propose_new_req(request, func_name)
 
         self.atomic_broadcaster.consensus()
 
-        response_dict = self.atomic_broadcaster.deliver_requests(self.db, curr_msg_id)
+        response_dict = self.atomic_broadcaster.deliver_requests(self.db, rpc_return_msg_id)
 
         print("+" * 60)
 
@@ -944,7 +973,8 @@ def start_server(args):
     server.add_insecure_port(host + ':' + port)
     server.start()
     
-    simulate_failure = True
+    simulate_failure = False
+    failure_nodes = {0, 1}
 
     while True:
         
@@ -977,9 +1007,9 @@ def start_server(args):
             if simulate_failure:
                 print("+" * 60)
                 
-                if atomic_broadcaster.server_id == 1:
+                if atomic_broadcaster.server_id in failure_nodes:
                     
-                    if atomic_broadcaster.local_seq_num > 1:
+                    if atomic_broadcaster.local_seq_num > 3:
 
                         print("Simulating Transient Failure ... ")
                         print("node id: ", atomic_broadcaster.server_id)
