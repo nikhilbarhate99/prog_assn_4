@@ -174,8 +174,10 @@ class DBServer:
 
 
 class MetaData:
-    def __init__(self, max_global_seq_num=None, node_wise_msgs=[]):
+    def __init__(self, max_global_seq_num=None, local_seq_num=None, seq_num_iter=None, node_wise_msgs=[]):
         self.max_global_seq_num = max_global_seq_num
+        self.local_seq_num = local_seq_num
+        self.seq_num_iter = seq_num_iter
         self.node_wise_msgs = node_wise_msgs
         
 class RequestMessage:
@@ -194,11 +196,12 @@ class SequenceMessage:
         self.meta_data = meta_data
 
 class RetransmissionMessage:
-    def __init__(self, sender_id, ret_msg_id, ret_msg_type, meta_data=None):
+    def __init__(self, sender_id, ret_msg_id, ret_msg_seq_num, ret_msg_type, meta_data=None):
         self.sender_id = sender_id
         self.ret_msg_id = ret_msg_id
-        self.ret_msg_type = ret_msg_type # 'request_msg' or 'sequence_msg'
-        assert ret_msg_type in {'request_msg', 'sequence_msg'}, 'unknown ret_msg_type in Retransmission msg'
+        self.ret_msg_seq_num = ret_msg_seq_num
+        self.ret_msg_type = ret_msg_type # 'request_msg' or 'sequence_msg' or 'sequence_msg_via_num'
+        assert ret_msg_type in {'request_msg', 'sequence_msg', 'sequence_msg_via_num'}, 'unknown ret_msg_type in Retransmission msg'
         self.meta_data = meta_data
 
 class AtomicBroadcaster:
@@ -211,14 +214,18 @@ class AtomicBroadcaster:
         self.num_nodes = len(self.node_list)
         
         self.prev_server_id = self.server_id - 1 if self.server_id > 0 else self.num_nodes - 1
-
+        self.next_server_id = self.server_id + 1 if self.server_id < self.num_nodes - 1 else 0
 
         # last global num delivered
         self.local_seq_num = -1
         self.max_global_seq_num = -1
 
+        # goes from local_seq_num to max_global_seq_num
+        # tracks seq_num for which we have both req msg and seq msg wiht s <= seq_num
+        self.seq_num_iter = -1 
+        
 
-        # self.node_wise_msgs = [-1] * 
+        # self.node_wise_msgs = [-1] * self.num_nodes
 
 
         # maps node -> local_seq_num -> req_msg 
@@ -228,7 +235,7 @@ class AtomicBroadcaster:
         self.sequence_msg_buffer = dict()
 
         # maps global_seq -> msg_id (node_id, local_seq_num)
-        self.global_seq_msg_buffer = dict()
+        self.global_seq_buffer = dict()
 
         # stores current msg ids that have not been deilvered 
         self.curr_req_msg = set()
@@ -249,14 +256,18 @@ class AtomicBroadcaster:
         # condition variable for mutual exclusion
         self.lock = threading.Lock()
 
+    def add_meta_data_to_msg(self, msg):
+        # set meta data 
+        meta_data = MetaData(max_global_seq_num=self.max_global_seq_num, 
+                             local_seq_num=self.local_seq_num,
+                             seq_num_iter=self.seq_num_iter)
+        msg.meta_data = meta_data
+        return msg
+
     def send_message(self, msg, node_id):
         # set meta data
-        meta_data = MetaData(self.max_global_seq_num)
-        msg.meta_data = meta_data
+        msg = self.add_meta_data_to_msg(msg)
 
-        print("LEN OF UDP PACKET: ", len(pickle.dumps(msg)))
-
-        
         host, port = self.node_list[node_id]
         self.sock.sendto(pickle.dumps(msg), (host, int(port)))
 
@@ -269,10 +280,7 @@ class AtomicBroadcaster:
     
     def broadcast_message(self, msg):
         # set meta data
-        meta_data = MetaData(self.max_global_seq_num)
-        msg.meta_data = meta_data
-        
-        print("LEN OF UDP PACKET: ", len(pickle.dumps(msg)))
+        msg = self.add_meta_data_to_msg(msg)
 
         for (host, port) in self.node_list:
             self.sock.sendto(pickle.dumps(msg), (host, int(port)))
@@ -303,8 +311,8 @@ class AtomicBroadcaster:
                 self.sequence_msg_buffer[node] = dict()
         if local_seq_num not in self.sequence_msg_buffer[node]:
             self.sequence_msg_buffer[node][local_seq_num] = seq_msg
-            # also add to global_seq_msg_buffer
-            self.global_seq_msg_buffer[seq_msg.global_seq_num] = seq_msg.msg_id
+            # also add to global_seq_buffer
+            self.global_seq_buffer[seq_msg.global_seq_num] = seq_msg.msg_id
             # add to list of current unapplied msgs
             self.curr_seq_msg.add(seq_msg.msg_id)
             self.max_global_seq_num = max(self.max_global_seq_num, seq_msg.global_seq_num)
@@ -312,16 +320,20 @@ class AtomicBroadcaster:
         self.broadcast_message(seq_msg)
     
 
-    def send_retransmission_msg(self, recv_node_id, msg_id, ret_msg_type):
-        retransmit_msg = RetransmissionMessage(self.server_id, msg_id, ret_msg_type)
+    def send_retransmission_msg(self, recv_node_id, msg_id, ret_msg_seq_num, ret_msg_type):
+        retransmit_msg = RetransmissionMessage(self.server_id, 
+                                               msg_id,
+                                               ret_msg_seq_num,
+                                               ret_msg_type)
         self.send_message(retransmit_msg, recv_node_id)
 
+    def get_seq_num_assigner_id(self, id):
+        return id % self.num_nodes
 
     def propose_new_req(self, request, func_name):
         msg_id = (self.server_id, self.local_seq_num)
         self.broadcast_request_message(msg_id, request, func_name)
         return msg_id
-
 
     def process_message(self, msg, node_id):
         
@@ -353,8 +365,8 @@ class AtomicBroadcaster:
             if local_seq_num not in self.sequence_msg_buffer[node]:
                 self.sequence_msg_buffer[node][local_seq_num] = msg
 
-                # also add to global_seq_msg_buffer
-                self.global_seq_msg_buffer[msg.global_seq_num] = msg.msg_id
+                # also add to global_seq_buffer
+                self.global_seq_buffer[msg.global_seq_num] = msg.msg_id
 
                 # add to list of current unapplied msgs
                 self.curr_seq_msg.add(msg.msg_id)
@@ -370,20 +382,35 @@ class AtomicBroadcaster:
 
         elif type(msg) == RetransmissionMessage:
             
-            # get msg from buffer
-            node, local_seq_num = msg.ret_msg_id
-
             if msg.ret_msg_type == 'request_msg':
+                # get msg from buffer
+                node, local_seq_num = msg.ret_msg_id
                 if node in self.request_msg_buffer and local_seq_num in self.request_msg_buffer[node]:
                     ret_msg = self.request_msg_buffer[node][local_seq_num]
                     # send the msg to sender
                     self.send_message(ret_msg, msg.sender_id)
 
             elif msg.ret_msg_type == 'sequence_msg':
+                # get msg from buffer
+                node, local_seq_num = msg.ret_msg_id
                 if node in self.sequence_msg_buffer and local_seq_num in self.sequence_msg_buffer[node]:
                     ret_msg = self.sequence_msg_buffer[node][local_seq_num]
                     # send the msg to sender
                     self.send_message(ret_msg, msg.sender_id)
+
+            elif msg.ret_msg_type == 'sequence_msg_via_num':
+                
+                s = msg.ret_msg_seq_num
+                assert s in self.global_seq_buffer, 'sequence_msg_via_num, s has to be assigned before call'
+
+                node, local_seq_num = self.global_seq_buffer[s]
+                ret_msg = self.sequence_msg_buffer[node][local_seq_num]
+                # send the msg to sender
+                self.send_message(ret_msg, msg.sender_id)
+
+
+                # send all msgs with s from begin_s to end_s
+
             else:
                 NotImplementedError
             
@@ -405,6 +432,7 @@ class AtomicBroadcaster:
 
 
 
+
     def consensus(self):
         
         ##### only keep this in the final consensus() fn
@@ -416,6 +444,45 @@ class AtomicBroadcaster:
         
         while not consensus_reached:
             
+            # exit if no new message
+            # awake because of retransmission request or old msg
+
+             ###### check consensus conditions ######
+
+            req_msg_w_no_seq = self.curr_req_msg.difference(self.curr_seq_msg)
+
+            print("@" * 30)
+
+            print("request_msg_buffer ", self.request_msg_buffer)
+            print('-' * 10)
+            print("sequence_msg_buffer ", self.sequence_msg_buffer)
+            print('-' * 10)
+            print("global_seq_buffer ", self.global_seq_buffer)
+            print('-' * 10)
+            print("curr_req_msg ", self.curr_req_msg)
+            print('-' * 10)
+            print("curr_seq_msg ", self.curr_seq_msg)
+            print('-' * 10)
+            print("req_msg_w_no_seq ", req_msg_w_no_seq)
+
+            print("local_seq_num ", self.local_seq_num)
+            print("seq_num_iter ", self.seq_num_iter)
+            print("max_global_seq_num ", self.max_global_seq_num)
+            
+            print("@" * 30)
+
+            if self.seq_num_iter == self.max_global_seq_num and self.curr_req_msg == self.curr_seq_msg:
+                
+                print("consensus reached ", self.server_id)
+                
+
+                print("@" * 30)
+
+                consensus_reached = True
+                
+                break
+
+
             ###### send msgs ######
 
             """
@@ -425,7 +492,7 @@ class AtomicBroadcaster:
             need all req - seq corresponding msgs
 
             """
-            # deal with misssing msgs
+            # deal with missing msgs
 
             # get missing msgs from prev node for msg < k
             # could also be next nodes ? dont care about them , prev node assigns global seq num
@@ -444,55 +511,71 @@ class AtomicBroadcaster:
             # # could also be next nodes ? dont care about them , prev node assigns global seq num
 
 
+            assert self.seq_num_iter < self.max_global_seq_num or len(self.curr_req_msg) > 0, 'seq_msg_iter >= max_global_seq_num'
 
-
-
+            next_seq_num_iter =  self.seq_num_iter + 1
+            next_node_id = self.get_seq_num_assigner_id(next_seq_num_iter)
             req_msg_w_no_seq = self.curr_req_msg.difference(self.curr_seq_msg)
+            
+            if self.seq_num_iter < self.max_global_seq_num:
 
-            next_local_seq = self.local_seq_num + 1
-            next_global_seq = self.max_global_seq_num + 1
-
-            # handle req msg with no seq msg
-            if len(req_msg_w_no_seq) > 0:
-                
-                if next_global_seq % self.num_nodes == self.server_id:
-                    
-                    ### temporary just one node asigns all global seq num
-
-                    global_seq_num = next_global_seq
-
-                    self.max_global_seq_num = max(self.max_global_seq_num, global_seq_num)
-                    
+                # next node is this server and we still have req msg with no seq msg then assign it
+                if next_node_id == self.server_id and len(req_msg_w_no_seq) > 0:
+                    global_seq_num = next_seq_num_iter
+                    # choose next req_msg without global sequence
                     msg_id = next(iter(req_msg_w_no_seq))
-
+                    self.broadcast_sequence_message(msg_id, global_seq_num)
+                    
+                    # this seq num has been handled, so move to next seq num
+                    self.seq_num_iter = next_seq_num_iter
 
                     print("ASSIGNING GLOBAL SEQ NUM")
                     print(msg_id)
                     print(global_seq_num)
-
-
-                    # print("%" * 30)
-                    # print(msg_id, global_seq_num)
-                    # print(self.request_msg_buffer)
-                    # print(self.sequence_msg_buffer)
-                    # print(self.global_seq_msg_buffer)
-                    # print("%" * 30)
-                
-                    self.broadcast_sequence_message(msg_id, global_seq_num)
                 
                 else:
+                    # ask for corresponding seq msg
+                    if next_seq_num_iter not in self.global_seq_buffer:
+                        self.send_retransmission_msg(next_node_id, None, next_seq_num_iter, 'sequence_msg_via_num')
                     
-                    # ask for corresponding sequence msg
+                    # ask for corresponding req msg
+                    else:
+                        next_msg_id = self.global_seq_buffer[next_seq_num_iter]
+                        node, local_seq_num = next_msg_id
+                        if node not in self.request_msg_buffer or local_seq_num not in self.request_msg_buffer[node]:
+                            self.send_retransmission_msg(next_node_id, next_msg_id, None, 'request_msg')
 
-                    pass
-            
+                        # if both req and seq msg present in buffer, then move to next seq num
+                        else:
+                            self.seq_num_iter = next_seq_num_iter
+
+            elif len(self.curr_req_msg) > 0:
+                # next node is this server and we still have req msg with no seq msg then assign it
+                if next_node_id == self.server_id and len(req_msg_w_no_seq) > 0:
+                    global_seq_num = next_seq_num_iter
+                    # choose next req_msg without global sequence
+                    msg_id = next(iter(req_msg_w_no_seq))
+                    self.broadcast_sequence_message(msg_id, global_seq_num)
+                    
+                    # this seq num has been handled, so move to next seq num
+                    self.seq_num_iter = next_seq_num_iter
+
+                    print("ASSIGNING GLOBAL SEQ NUM")
+                    print(msg_id)
+                    print(global_seq_num)
+                
+                elif len(req_msg_w_no_seq) > 0:
+                    # get msg from buffer
+                    node, local_seq_num = next(iter(req_msg_w_no_seq))
+                    ret_msg = self.request_msg_buffer[node][local_seq_num]
+                    # send the msg to sender
+                    self.broadcast_message(ret_msg)
+                    time.sleep(0.5)
+                    
 
 
-            seq_msg_w_no_req = self.curr_seq_msg.difference(self.curr_req_msg)
-            if len(req_msg_w_no_seq) > 0:
-                # ask for corresponding request msg
-                pass
 
+            # if we have req msg with no global seq then keep sending it until we get global seq
             
 
 
@@ -505,40 +588,7 @@ class AtomicBroadcaster:
                 print("In Consensus while loop exception occurred: ", e)
                 pass
 
-
-
-            ###### check consensus conditions ######
-
-            req_msg_w_no_seq = self.curr_req_msg.difference(self.curr_seq_msg)
-
-
-            print("@" * 30)
-
-            print("request_msg_buffer ", self.request_msg_buffer)
-            print('-' * 10)
-            print("sequence_msg_buffer ", self.sequence_msg_buffer)
-            print('-' * 10)
-            print("global_seq_msg_buffer ", self.global_seq_msg_buffer)
-            print('-' * 10)
-            print("curr_req_msg ", self.curr_req_msg)
-            print('-' * 10)
-            print("curr_seq_msg ", self.curr_seq_msg)
-            print('-' * 10)
-            print("req_msg_w_no_seq ", req_msg_w_no_seq)
-
-            print("@" * 30)
             
-
-            # exit if we have all the required msgs
-            if(self.curr_req_msg == self.curr_seq_msg):
-
-                print("consensus reached ", self.server_id)
-                print("local_seq_num ", self.local_seq_num)
-                print("max_global_seq_num ", self.max_global_seq_num)
-
-                print("@" * 30)
-
-                consensus_reached = True
 
 
 
@@ -561,10 +611,10 @@ class AtomicBroadcaster:
         for s in range(begin_seq_num, end_seq_num):
             
             # make sure the msg with global seq num 's' is in buffer
-            assert s in self.global_seq_msg_buffer, 'msg to be delivered not in buffer'
+            assert s in self.global_seq_buffer, 'msg to be delivered not in buffer'
 
             # get request message with global seq num 's'
-            msg_id = self.global_seq_msg_buffer[s]
+            msg_id = self.global_seq_buffer[s]
             node, local_seq_num = msg_id
             req_msg = self.request_msg_buffer[node][local_seq_num]            
 
@@ -894,8 +944,9 @@ def start_server(args):
     server.add_insecure_port(host + ':' + port)
     server.start()
     
-    while True:
+    simulate_failure = True
 
+    while True:
         
         try:
             atomic_broadcaster.lock.acquire()
@@ -923,10 +974,34 @@ def start_server(args):
             
             print("In Main while loop exception occurred: ", e)
 
-            print("+" * 60)
+            if simulate_failure:
+                print("+" * 60)
+                
+                if atomic_broadcaster.server_id == 1:
+                    
+                    if atomic_broadcaster.local_seq_num > 1:
 
+                        print("Simulating Transient Failure ... ")
+                        print("node id: ", atomic_broadcaster.server_id)
+                        
+                        for _ in range(10):
+                            try:
+                                msg, node_id = atomic_broadcaster.recv_message()
+                                print("discarding msg")
+
+                            except Exception as e:
+                                print("no msg")
+
+
+                        time.sleep(5)
+                        simulate_failure = False # only run this once
+
+
+            print("+" * 60)
+            
             atomic_broadcaster.lock.release()
             
+
             time.sleep(WHILE_LOOP_DELAY)
 
             continue

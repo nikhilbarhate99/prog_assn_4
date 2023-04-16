@@ -12,7 +12,7 @@ UDP_SOCKET_TIMEOUT = 1.0
 UDP_PACKET_SIZE = 1024 # 1024 / 4096 / 8192
 
 META_DATA_DELIM = ';'
-WHILE_LOOP_DELAY = 0.3
+WHILE_LOOP_DELAY = 0.2
 
 # ====================================================
 
