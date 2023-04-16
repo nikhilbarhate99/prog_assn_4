@@ -15,6 +15,9 @@ python3 -m financial_transaction
 ```
 
 ```
+python3 -m client.seller_client
+python3 -m client.buyer_client
+
 python3 -m client.test_seller
 python3 -m client.test_buyer
 ```
@@ -26,16 +29,10 @@ python3 -m client.test_buyer
 
     1. Communication between server and DB is acheived using gRPC
     2. Communication between client and server is acheived using REST API via HTTP
-    3. All request messages contain a string variable ('action') to determine the requested functionality.
-    4. All response messages contain a boolean variable ('success') to determine the status of the request.
-    5. The data is stored in memory on these separate services in the form of nested python dictionaries.
-
-### Assumptions:
-
-    - for the search function, the keywords in the database exactly match the keywords in the query
-    - while removing an item if updated quantity is less than or equal to 0, then the item is removed from the database
-    - while viewing the cart the buyer can see product ids only, rest of the product characterstics 
-        can be refered from results of the search query.
+    3. Customer DB is replicated using a custom Atomic Broadcast protocol
+    4. This protocol assumes only transient communication failures (i.e. no partition and no process failure)
+    5. A global sequence number 's' is assigned by node with id, s % num_nodes.
+    6. With these assumptions, a RPC request with assigned global sequence cannot be lost, hence a majority check is not necessary before delivering a msg and is not implemented.
 
 
 ### Things that work:
@@ -63,6 +60,7 @@ python3 -m client.test_buyer
 
 ### Things that do not work:
 
+    - Atomic Broadcast protocol for Customer DB is slow and not optimized for performance
     - Little to no exception handling
 
 

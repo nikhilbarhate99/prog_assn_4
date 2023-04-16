@@ -282,22 +282,26 @@ class BuyerRequestHandler(BaseHTTPRequestHandler):
 
 def start_server(args):
 
-    # node_id = args.node_id
-    # host, port = BUYER_SERVER_LIST[node_id]
+    node_id = args.node_id
 
-    # httpd = HTTPServer((host, int(port)), BuyerRequestHandler)
-    # print("=============================")
-    # print("Server running")
-    # print("Server type: BUYER SERVER")
-    # print("node id:", node_id)
-    # print(host, port)
-    # print("=============================")
+    assert node_id < BUYER_SERVER_N, 'max node id BUYER_SERVER_N - 1'
 
-    # httpd.serve_forever()
+    host, port = BUYER_SERVER_LIST[node_id]
+    port = int(port)
+
+    httpd = HTTPServer((host, port), BuyerRequestHandler)
+    print("=============================")
+    print("Server running")
+    print("Server type: BUYER SERVER")
+    print("node id:", node_id)
+    print(host, port)
+    print("=============================")
+
+    httpd.serve_forever()
     
-    # print("=============================")
-    # print("Server shutdown")
-    # print("=============================")
+    print("=============================")
+    print("Server shutdown")
+    print("=============================")
 
 
 

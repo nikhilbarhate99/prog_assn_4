@@ -3,18 +3,20 @@
 
 # ====================================================
 
-HTTP_TIME_OUT = 10
-MAX_WORKERS = 1     # Keep it 1 for sequential Customer DB (otherwise concurrent)
+HTTP_TIME_OUT = 100
 
+PRODUCT_DB_MAX_WORKERS = 1
 CUSTOMER_DB_MAX_WORKERS = 5
 
 UDP_SOCKET_TIMEOUT = 1.0
-UDP_PACKET_SIZE = 1024 # 1024 / 4096 / 8192
+UDP_PACKET_SIZE = 512 # 1024 / 4096 / 8192
 
-RECEIVE_LOOP_DELAY = 0.2
+RECEIVE_LOOP_DELAY = 0.1
 
 CUSTOMER_DB_N = 3
 PRODUCT_DB_N = 1
+SELLER_SERVER_N = 2
+BUYER_SERVER_N = 2
 
 # ====================================================
 

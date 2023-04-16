@@ -201,23 +201,27 @@ class SellerRequestHandler(BaseHTTPRequestHandler):
 
 def start_server(args):
     
-    # node_id = args.node_id
-    # host, port = SELLER_SERVER_LIST[node_id]
+    node_id = args.node_id
 
-    # httpd = HTTPServer((host, int(port)), SellerRequestHandler)
+    assert node_id < SELLER_SERVER_N, 'max node id SELLER_SERVER_N - 1'
 
-    # print("=============================")
-    # print("Server running")
-    # print("Server type: SELLER SERVER")
-    # print("node id:", node_id)
-    # print(host, port)
-    # print("=============================")
+    host, port = SELLER_SERVER_LIST[node_id]
+    port = int(port)
 
-    # httpd.serve_forever()
+    httpd = HTTPServer((host, port), SellerRequestHandler)
+
+    print("=============================")
+    print("Server running")
+    print("Server type: SELLER SERVER")
+    print("node id:", node_id)
+    print(host, port)
+    print("=============================")
+
+    httpd.serve_forever()
     
-    # print("=============================")
-    # print("Server shutdown")
-    # print("=============================")
+    print("=============================")
+    print("Server shutdown")
+    print("=============================")
 
 
 

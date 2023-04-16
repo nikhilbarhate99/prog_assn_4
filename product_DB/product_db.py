@@ -191,7 +191,7 @@ def start_server(args):
 
     # initialize db and server
     db = DBServer()
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=MAX_WORKERS))
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=PRODUCT_DB_MAX_WORKERS))
 
     # add services to server
     seller_pb2_grpc.add_SellerServicer_to_server(SellerServicer(db), server)

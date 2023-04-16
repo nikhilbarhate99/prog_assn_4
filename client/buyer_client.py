@@ -2,6 +2,7 @@ import urllib.request
 import json
 import http.client
 import time
+import random
 
 from global_variables import *
 
@@ -10,7 +11,11 @@ class BuyerClient:
 
     def create_account(self, username, password, name):
         request = {"action": "create_buyer", "username": username, "password": password, "name":name}
-        conn = http.client.HTTPConnection(BUYER_SERVER_HOST, BUYER_SERVER_PORT, timeout=HTTP_TIME_OUT)
+
+        host, port = random.choice(BUYER_SERVER_LIST[:BUYER_SERVER_N])
+        port = int(port)
+
+        conn = http.client.HTTPConnection(host, port, timeout=HTTP_TIME_OUT)
         headers = {'Content-type': 'application/json'}
         conn.request('POST', '/create_buyer', body=json.dumps(request), headers=headers)
         response = conn.getresponse()
@@ -25,7 +30,11 @@ class BuyerClient:
 
     def login(self, username, password):
         request = {"action": "login_buyer", "username": username, "password": password}
-        conn = http.client.HTTPConnection(BUYER_SERVER_HOST, BUYER_SERVER_PORT, timeout=HTTP_TIME_OUT)
+
+        host, port = random.choice(BUYER_SERVER_LIST[:BUYER_SERVER_N])
+        port = int(port)
+
+        conn = http.client.HTTPConnection(host, port, timeout=HTTP_TIME_OUT)
         headers = {'Content-type': 'application/json'}
         conn.request('POST', '/login_buyer', body=json.dumps(request), headers=headers)
         response = conn.getresponse()
@@ -41,7 +50,11 @@ class BuyerClient:
 
     def display_cart(self, username):
         request = {"action": "display_cart", "username": username}
-        conn = http.client.HTTPConnection(BUYER_SERVER_HOST, BUYER_SERVER_PORT, timeout=HTTP_TIME_OUT)
+
+        host, port = random.choice(BUYER_SERVER_LIST[:BUYER_SERVER_N])
+        port = int(port)
+
+        conn = http.client.HTTPConnection(host, port, timeout=HTTP_TIME_OUT)
         headers = {'Content-type': 'application/json'}
         conn.request('POST', '/display_cart', body=json.dumps(request), headers=headers)
         response = conn.getresponse()
@@ -57,7 +70,11 @@ class BuyerClient:
 
     def logout(self, username):
         request = {"action": "logout_buyer", "username": username}
-        conn = http.client.HTTPConnection(BUYER_SERVER_HOST, BUYER_SERVER_PORT, timeout=HTTP_TIME_OUT)
+
+        host, port = random.choice(BUYER_SERVER_LIST[:BUYER_SERVER_N])
+        port = int(port)
+
+        conn = http.client.HTTPConnection(host, port, timeout=HTTP_TIME_OUT)
         headers = {'Content-type': 'application/json'}
         conn.request('POST', '/logout_buyer', body=json.dumps(request), headers=headers)
         response = conn.getresponse()
@@ -72,7 +89,11 @@ class BuyerClient:
 
     def add_to_cart(self, username, prod_id, quantity):
         request = {"action": "add_to_cart", "username": username, "prod_id": prod_id, "quantity": quantity}
-        conn = http.client.HTTPConnection(BUYER_SERVER_HOST, BUYER_SERVER_PORT, timeout=HTTP_TIME_OUT)
+
+        host, port = random.choice(BUYER_SERVER_LIST[:BUYER_SERVER_N])
+        port = int(port)
+
+        conn = http.client.HTTPConnection(host, port, timeout=HTTP_TIME_OUT)
         headers = {'Content-type': 'application/json'}
         conn.request('POST', '/add_to_cart', body=json.dumps(request), headers=headers)
         response = conn.getresponse()
@@ -88,7 +109,11 @@ class BuyerClient:
        
     def remove_cart(self, username, prod_id, quantity):
         request = {"action": "remove_cart", "username": username, "prod_id": prod_id, "quantity": quantity}
-        conn = http.client.HTTPConnection(BUYER_SERVER_HOST, BUYER_SERVER_PORT, timeout=HTTP_TIME_OUT)
+
+        host, port = random.choice(BUYER_SERVER_LIST[:BUYER_SERVER_N])
+        port = int(port)
+
+        conn = http.client.HTTPConnection(host, port, timeout=HTTP_TIME_OUT)
         headers = {'Content-type': 'application/json'}
         conn.request('POST', '/remove_cart', body=json.dumps(request), headers=headers)
         response = conn.getresponse()
@@ -104,7 +129,11 @@ class BuyerClient:
     
     def clear_cart(self, username):
         request = {"action": "clear_cart", "username": username}
-        conn = http.client.HTTPConnection(BUYER_SERVER_HOST, BUYER_SERVER_PORT, timeout=HTTP_TIME_OUT)
+
+        host, port = random.choice(BUYER_SERVER_LIST[:BUYER_SERVER_N])
+        port = int(port)
+
+        conn = http.client.HTTPConnection(host, port, timeout=HTTP_TIME_OUT)
         headers = {'Content-type': 'application/json'}
         conn.request('POST', '/clear_cart', body=json.dumps(request), headers=headers)
         response = conn.getresponse()
@@ -121,7 +150,11 @@ class BuyerClient:
 
     def search_items(self, category, keywords,username):
         request = {"action": "search", "prod_cat": category,"keywords":keywords,"username":username}
-        conn = http.client.HTTPConnection(BUYER_SERVER_HOST, BUYER_SERVER_PORT, timeout=HTTP_TIME_OUT)
+
+        host, port = random.choice(BUYER_SERVER_LIST[:BUYER_SERVER_N])
+        port = int(port)
+
+        conn = http.client.HTTPConnection(host, port, timeout=HTTP_TIME_OUT)
         headers = {'Content-type': 'application/json'}
         conn.request('POST', '/search', body=json.dumps(request), headers=headers)
         response = conn.getresponse()
@@ -136,7 +169,11 @@ class BuyerClient:
 
     def get_purchase_history(self, username):
         request = {"action": "get_purchase_history", "username": username}
-        conn = http.client.HTTPConnection(BUYER_SERVER_HOST, BUYER_SERVER_PORT, timeout=HTTP_TIME_OUT)
+
+        host, port = random.choice(BUYER_SERVER_LIST[:BUYER_SERVER_N])
+        port = int(port)
+
+        conn = http.client.HTTPConnection(host, port, timeout=HTTP_TIME_OUT)
         headers = {'Content-type': 'application/json'}
         conn.request('POST', '/get_purchase_history', body=json.dumps(request), headers=headers)
         response = conn.getresponse()
@@ -153,7 +190,11 @@ class BuyerClient:
 
     def make_purchase(self, username, creditcard ):
         request = {"action": "make_purchase", "username": username, "creditcard":creditcard}
-        conn = http.client.HTTPConnection(BUYER_SERVER_HOST, BUYER_SERVER_PORT, timeout=HTTP_TIME_OUT)
+
+        host, port = random.choice(BUYER_SERVER_LIST[:BUYER_SERVER_N])
+        port = int(port)
+
+        conn = http.client.HTTPConnection(host, port, timeout=HTTP_TIME_OUT)
         headers = {'Content-type': 'application/json'}
         conn.request('POST', '/make_purchase', body=json.dumps(request), headers=headers)
         response = conn.getresponse()
@@ -169,7 +210,11 @@ class BuyerClient:
 
     def get_seller_rating(self, username):
         request = {"action": "get_seller_rating", "username": username}
-        conn = http.client.HTTPConnection(BUYER_SERVER_HOST, BUYER_SERVER_PORT, timeout=HTTP_TIME_OUT)
+
+        host, port = random.choice(BUYER_SERVER_LIST[:BUYER_SERVER_N])
+        port = int(port)
+
+        conn = http.client.HTTPConnection(host, port, timeout=HTTP_TIME_OUT)
         headers = {'Content-type': 'application/json'}
         conn.request('POST', '/get_seller_rating', body=json.dumps(request), headers=headers)
         response = conn.getresponse()
@@ -215,9 +260,10 @@ def start_client():
     # handle_interface(client)
 
     # ###############################call functions################################
-    max_iterations=100
+    max_iterations = 10
 
-    start_time=time.time()
+    start_time = time.time()
+
     for i in range(max_iterations):
 
     #     response = client.create_account("username"+str(i), "password"+str(i), "name"+str(i))
@@ -225,7 +271,6 @@ def start_client():
     #     response = client.add_to_cart("username"+str(i), i, 1)
     #     response = client.view_cart("username"+str(i))
     #     response = client.remove_cart("username"+str(i), i, 1)
-
 
 
         client.create_account("12345","1234","1234")
@@ -247,11 +292,13 @@ def start_client():
         client.get_seller_rating("123")
         client.logout("12345")
 
+        print(i, time.time() - start_time)
+
 
 
 
     end_time = time.time()
-    time_for_1000_apicalls=end_time - start_time
+    time_for_1000_apicalls = end_time - start_time
 
 
     print(time_for_1000_apicalls)

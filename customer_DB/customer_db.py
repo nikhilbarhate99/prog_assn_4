@@ -458,11 +458,6 @@ class AtomicBroadcaster:
         consensus_reached = False
         
         while not consensus_reached:
-            
-            # exit if no new message
-            # awake because of retransmission request or old msg
-
-             ###### check consensus conditions ######
 
             req_msg_w_no_seq = self.curr_req_msg.difference(self.curr_seq_msg)
 
@@ -485,6 +480,8 @@ class AtomicBroadcaster:
             print("max_global_seq_num ", self.max_global_seq_num)
             
             print("@" * 30)
+
+            ###### check consensus conditions ######
 
             if self.seq_num_iter == self.max_global_seq_num and self.curr_req_msg == self.curr_seq_msg:
                 
@@ -567,14 +564,12 @@ class AtomicBroadcaster:
                     else:
                         # send the msg to sender
                         self.broadcast_retransmission_msg(next_msg_id, None, 'sequence_msg')
-             
-                                                     
-            ## too many msgs and too slow ... fix it
-                    
 
-            # if we have req msg with no global seq then keep sending it until we get global seq
+
+            ##### too many msgs and too slow ... fix it
             
             time.sleep(RECEIVE_LOOP_DELAY) #### ++++++++++++++++++++++++++++++++++++++++++++++
+
 
             ###### receive and process msgs ######
             for _ in range(3):
@@ -673,9 +668,7 @@ class AtomicBroadcaster:
             # update local seq number after applying corresponding request
             self.local_seq_num += 1
 
-
             self.list_of_delivered_requests.append([s, msg_id, func_name])
-
 
             # keep current response_dict to return 
             if rpc_return_msg_id is not None and msg_id == rpc_return_msg_id:
@@ -1107,7 +1100,6 @@ def start_server(args):
     # initialize db and server
     db = DBServer()
 
-
     atomic_broadcaster = AtomicBroadcaster(node_id, CUSTOMER_DB_LIST[:CUSTOMER_DB_N])
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=CUSTOMER_DB_MAX_WORKERS))
 
@@ -1121,7 +1113,6 @@ def start_server(args):
     
 
     while True:
-        
         try:
             atomic_broadcaster.lock.acquire()
 
@@ -1129,30 +1120,19 @@ def start_server(args):
 
             # try to receive msg
             msg, node_id = atomic_broadcaster.recv_message()
-
-            
             atomic_broadcaster.process_message(msg, node_id)
-
             atomic_broadcaster.consensus()
-
             atomic_broadcaster.deliver_requests(db, None)
-
             print("+" * 60)
 
-            atomic_broadcaster.lock.release()
-
-            # time.sleep(WHILE_LOOP_DELAY)
-            
+            atomic_broadcaster.lock.release()            
 
         except Exception as e:
-            
             print("In Main while loop exception occurred: ", e)
-
             print("+" * 60)
-            
+
             atomic_broadcaster.lock.release()
             
-
             time.sleep(RECEIVE_LOOP_DELAY)
 
             continue

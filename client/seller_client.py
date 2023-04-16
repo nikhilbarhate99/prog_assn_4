@@ -2,6 +2,7 @@ import urllib.request
 import json
 import http.client
 import time
+import random
 
 from global_variables import *
 
@@ -13,7 +14,10 @@ class SellerClient:
 
         request = {"action": "create_seller", "username": username, "password": password, "name":name}
 
-        conn = http.client.HTTPConnection(SELLER_SERVER_HOST, SELLER_SERVER_PORT, timeout=HTTP_TIME_OUT)
+        host, port = random.choice(SELLER_SERVER_LIST[:SELLER_SERVER_N])
+        port = int(port)
+
+        conn = http.client.HTTPConnection(host, port, timeout=HTTP_TIME_OUT)
 
         headers = {'Content-type': 'application/json'}
 
@@ -43,7 +47,10 @@ class SellerClient:
 
         request = {"action": "login_seller", "username": username, "password": password}
 
-        conn = http.client.HTTPConnection(SELLER_SERVER_HOST, SELLER_SERVER_PORT, timeout=HTTP_TIME_OUT)
+        host, port = random.choice(SELLER_SERVER_LIST[:SELLER_SERVER_N])
+        port = int(port)
+
+        conn = http.client.HTTPConnection(host, port, timeout=HTTP_TIME_OUT)
 
         headers = {'Content-type': 'application/json'}
 
@@ -73,7 +80,10 @@ class SellerClient:
 
         request = {"action": "logout_seller", "username": username}
 
-        conn = http.client.HTTPConnection(SELLER_SERVER_HOST, SELLER_SERVER_PORT, timeout=HTTP_TIME_OUT)
+        host, port = random.choice(SELLER_SERVER_LIST[:SELLER_SERVER_N])
+        port = int(port)
+
+        conn = http.client.HTTPConnection(host, port, timeout=HTTP_TIME_OUT)
 
         headers = {'Content-type': 'application/json'}
 
@@ -102,8 +112,11 @@ class SellerClient:
     def get_seller_rating(self, username):
 
         request = {"action": "get_seller_rating", "username": username}
+        
+        host, port = random.choice(SELLER_SERVER_LIST[:SELLER_SERVER_N])
+        port = int(port)
 
-        conn = http.client.HTTPConnection(SELLER_SERVER_HOST, SELLER_SERVER_PORT, timeout=HTTP_TIME_OUT)
+        conn = http.client.HTTPConnection(host, port, timeout=HTTP_TIME_OUT)
 
         headers = {'Content-type': 'application/json'}
 
@@ -135,7 +148,10 @@ class SellerClient:
 
         request = {"action": "add_item", "item": item, "quantity":quantity,"username":username}
 
-        conn = http.client.HTTPConnection(SELLER_SERVER_HOST, SELLER_SERVER_PORT, timeout=HTTP_TIME_OUT)
+        host, port = random.choice(SELLER_SERVER_LIST[:SELLER_SERVER_N])
+        port = int(port)
+
+        conn = http.client.HTTPConnection(host, port, timeout=HTTP_TIME_OUT)
 
         headers = {'Content-type': 'application/json'}
 
@@ -165,7 +181,10 @@ class SellerClient:
 
         request = {"action": "remove_item", "prod_id": prod_id, "quantity": quantity,"username":username}
 
-        conn = http.client.HTTPConnection(SELLER_SERVER_HOST, SELLER_SERVER_PORT, timeout=HTTP_TIME_OUT)
+        host, port = random.choice(SELLER_SERVER_LIST[:SELLER_SERVER_N])
+        port = int(port)
+
+        conn = http.client.HTTPConnection(host, port, timeout=HTTP_TIME_OUT)
 
         headers = {'Content-type': 'application/json'}
 
@@ -197,7 +216,10 @@ class SellerClient:
 
         request = {"action": "change_price", "prod_id": prod_id,"new_price": new_price,"username":username}
 
-        conn = http.client.HTTPConnection(SELLER_SERVER_HOST, SELLER_SERVER_PORT, timeout=HTTP_TIME_OUT)
+        host, port = random.choice(SELLER_SERVER_LIST[:SELLER_SERVER_N])
+        port = int(port)
+
+        conn = http.client.HTTPConnection(host, port, timeout=HTTP_TIME_OUT)
 
         headers = {'Content-type': 'application/json'}
 
@@ -229,7 +251,10 @@ class SellerClient:
 
         request = {"action": "all_items_by_seller", "username": username}
 
-        conn = http.client.HTTPConnection(SELLER_SERVER_HOST, SELLER_SERVER_PORT, timeout=HTTP_TIME_OUT)
+        host, port = random.choice(SELLER_SERVER_LIST[:SELLER_SERVER_N])
+        port = int(port)
+
+        conn = http.client.HTTPConnection(host, port, timeout=HTTP_TIME_OUT)
 
         headers = {'Content-type': 'application/json'}
 
@@ -267,20 +292,13 @@ def start_client():
 
     # ###############################call functions################################
 
-    max_iterations=100
+    max_iterations = 10
 
 
 
-    start_time=time.time()
+    start_time = time.time()
 
     for i in range(max_iterations):
-
-
-
-    # end_time = time.time()
-
-    # time_for_1000_apicalls=end_time - start_time
-
 
 
         client.create_account("123","123","123")
@@ -313,11 +331,19 @@ def start_client():
 
         client.all_items_by_seller("123")
 
-    end_time=time.time()
-    print(end_time-start_time)
+
+        print(i, time.time() - start_time)
+
+
+
+
+
+    end_time = time.time()
+
+    print(end_time - start_time)
+
+
 
 if __name__ == '__main__':
-
-    
 
     start_client()
