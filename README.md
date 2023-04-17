@@ -24,7 +24,7 @@ python3 -m client.test_buyer
 
 ### Performance Numbers:
 
-#### scenarios
+#### Scenarios
 
 1. Average response time for each client function when all replicas run normally (no failures).
 2. Average response time for each client function when one server-side sellers interface replica and one server-side buyers interface to which some of the clients are connected fail.
