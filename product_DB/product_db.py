@@ -4,6 +4,8 @@ import grpc
 from concurrent import futures 
 import time
 
+from pysyncobj import SyncObj, SyncObjConf, replicated, replicated_sync
+
 from grpc_files import seller_pb2
 from grpc_files import seller_pb2_grpc
 from grpc_files import buyer_pb2
@@ -14,8 +16,11 @@ from google.protobuf.json_format import Parse, ParseDict, MessageToDict, Message
 from global_variables import *
 
 
-class DBServer:
-    def __init__(self):
+class DBServer(SyncObj):
+    def __init__(self, self_address, other_raft_addresses):
+        cfg = SyncObjConf(dynamicMembershipChange = True)
+        super(DBServer, self).__init__(self_address, other_raft_addresses, cfg)
+
         self.prod_id_count = 0
 
         # stores all items in dict {prod_cat : {prod_id : item_data ... }}
@@ -29,8 +34,34 @@ class DBServer:
 
         # stores search mapping {keyword : {set of prod_ids}}
         self.search_data = dict()
-        
 
+
+
+    def print_DB_state(self):
+        print('+' * 40)
+
+        print(self.prod_id_count)
+
+        print("@@@@ product_data @@@@")
+        for k, v in self.product_data.items():
+            print(k, v)
+
+        print("@@@@ prod_id_to_cat @@@@")
+        for k, v in self.prod_id_to_cat.items():
+            print(k, v)
+
+        print("@@@@ usr_to_prod_id @@@@")
+        for k, v in self.usr_to_prod_id.items():
+            print(k, v)
+
+        print("@@@@ search_data @@@@")
+        for k, v in self.search_data.items():
+            print(k, v)
+
+        print('+' * 40)
+
+
+    @replicated_sync
     def add_item(self, usr_name, item, quantity):
 
         prod_cat = item.get("category")
@@ -66,6 +97,7 @@ class DBServer:
         return {"success": True, "message": "item successfully added!"}
 
 
+    @replicated_sync
     def remove_item(self, prod_id, quantity):
         prod_id = int(prod_id)
         quantity = int(quantity)
@@ -84,10 +116,11 @@ class DBServer:
                     self.usr_to_prod_id.get(item.get("sold_by")).remove(prod_id)
                     for kw in item.get("keywords"):
                         self.search_data.get(kw).remove(prod_id)
-                
+
         return {"success": True, "message": "removed item from DB"}
 
 
+    @replicated_sync
     def change_price(self, prod_id, new_price):
         prod_id = int(prod_id)
         new_price = int(new_price)
@@ -98,10 +131,10 @@ class DBServer:
             if item is not None:
                 self.product_data.get(prod_cat).get(prod_id).update({"price" : new_price})
 
-
         return {"success": True, "message": "changed item price"}
 
 
+    @replicated_sync
     def all_items_by_seller(self, usr_name):
         try:
             return {"success": True,
@@ -109,6 +142,8 @@ class DBServer:
         except:
             return {"success": False}
     
+
+    @replicated_sync
     def search(self, prod_cat, keywords):
         prod_cat = int(prod_cat)
         if prod_cat not in self.product_data:
@@ -127,51 +162,54 @@ class DBServer:
 
 
 
+_g_DB = None
+
+
 class SellerServicer(seller_pb2_grpc.SellerServicer):
-    def __init__(self, db):
-        self.db = db
+    def __init__(self):
+        # self.db = db
+        pass
     
     def add_item(self, request, context):
         item = MessageToDict(request.item, including_default_value_fields=True)
-        response_dict = self.db.add_item(request.username, item, request.quantity)
+        response_dict = _g_DB.add_item(request.username, item, request.quantity)
         response = ParseDict(response_dict, seller_pb2.SellerResponse())
         return response
 
     def remove_item(self, request, context):
-        response_dict = self.db.remove_item(request.prod_id, request.quantity)
+        response_dict = _g_DB.remove_item(request.prod_id, request.quantity)
         response = ParseDict(response_dict, seller_pb2.SellerResponse())
         return response
     
     def change_price(self, request, context):
-        response_dict = self.db.change_price(request.prod_id, request.new_price)
+        response_dict = _g_DB.change_price(request.prod_id, request.new_price)
         response = ParseDict(response_dict, seller_pb2.SellerResponse())
         return response
     
     def all_items_by_seller(self, request, context):
-
-        response_dict = self.db.all_items_by_seller(request.username)
+        response_dict = _g_DB.all_items_by_seller(request.username)
         response = ParseDict(response_dict, seller_pb2.SellerItemResponse())
-
         return response
     
 
 
 class BuyerServicer(buyer_pb2_grpc.BuyerServicer):
-    def __init__(self, db):
-        self.db = db
-    
+    def __init__(self):
+        # self.db = db
+        pass
+
     def search(self, request, context):
-        response_dict = self.db.search(request.prod_cat, request.keywords)
+        response_dict = _g_DB.search(request.prod_cat, request.keywords)
         response = ParseDict(response_dict, buyer_pb2.BuyerItemResponse())
         return response
     
     def all_items_by_seller(self, request, context):
-        response_dict = self.db.all_items_by_seller(request.username)
+        response_dict = _g_DB.all_items_by_seller(request.username)
         response = ParseDict(response_dict, buyer_pb2.BuyerItemResponse())
         return response
     
     def remove_purchase_item(self, request, context):
-        response_dict = self.db.remove_item(request.prod_id, request.quantity)
+        response_dict = _g_DB.remove_item(request.prod_id, request.quantity)
         response = ParseDict(response_dict, buyer_pb2.BuyerResponse())
         return response
 
@@ -179,29 +217,44 @@ class BuyerServicer(buyer_pb2_grpc.BuyerServicer):
 def start_server(args):
 
     node_id = args.node_id
+    
+    assert node_id < PRODUCT_DB_N, 'max node id PRODUCT_DB_N - 1'
+
     host, port = PRODUCT_DB_LIST[node_id]
+
+    raft_host, raft_port = PRODUCT_DB_RAFT_LIST[node_id]
+    other_raft_addresses = [addr for i, addr in enumerate(PRODUCT_DB_RAFT_LIST[:PRODUCT_DB_N]) if i != node_id]
+
+    # extract host and port from other_raft_addresses
+    other_raft_addresses = [addr[0] + ':' + addr[1] for addr in other_raft_addresses]
+
+    # initialize db and server
+    # db = DBServer(host + ':' + port, other_raft_addresses)
+
+
+    global _g_DB
+    _g_DB = DBServer(raft_host + ':' + raft_port, other_raft_addresses)
+
+
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=PRODUCT_DB_MAX_WORKERS))
+
+    # add services to server
+    seller_pb2_grpc.add_SellerServicer_to_server(SellerServicer(), server)
+    buyer_pb2_grpc.add_BuyerServicer_to_server(BuyerServicer(), server)
+
+    # add port and start server
+    server.add_insecure_port(host + ':' + port)
+    server.start()
 
     print("=============================")
     print("Server running")
     print("Server type: PRODUCT DB")
     print("node id:", node_id)
     print(host, port)
+    print("raft", raft_host, raft_port, " --other nodes ", other_raft_addresses)
     print("=============================")
 
-
-    # initialize db and server
-    db = DBServer()
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=PRODUCT_DB_MAX_WORKERS))
-
-    # add services to server
-    seller_pb2_grpc.add_SellerServicer_to_server(SellerServicer(db), server)
-    buyer_pb2_grpc.add_BuyerServicer_to_server(BuyerServicer(db), server)
-
-    # add port and start server
-    server.add_insecure_port(host + ':' + port)
-    server.start()
     server.wait_for_termination()
-
 
     print("=============================")
     print("Server shutdown")
@@ -216,26 +269,6 @@ def start_server(args):
 ##########################################################################
 # Testing functions
 ##########################################################################
-
-# def print_db_state(db):
-
-#     print("=============================")
-#     print(db.prod_id_count)
-#     print("=============================")
-#     for k, v in db.product_data.items():
-#         for k1, v1 in v.items():
-#             print(k, k1, v1)
-#     print("=============================")
-#     for k, v in db.prod_id_to_cat.items():
-#         print(k, v)
-#     print("=============================")
-#     for k, v in db.usr_to_prod_id.items():
-#         print(k, v)
-#     print("=============================")
-#     for k, v in db.search_data.items():
-#         print(k, v)
-#     print("=============================")
-
 
 
 # ##########################################################################

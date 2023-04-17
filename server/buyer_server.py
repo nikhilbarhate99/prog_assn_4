@@ -305,22 +305,22 @@ def start_server(args):
 
 
 
-    server = BuyerServer()
+    # server = BuyerServer()
     
-    customer_db_channel_list = []
-    customer_db_stub_list = []
-    for host, port in CUSTOMER_DB_LIST[:CUSTOMER_DB_N]:
-        customer_db_channel_list.append(grpc.insecure_channel(host + ':' + port))
-        customer_db_stub_list.append(buyer_pb2_grpc.BuyerStub(customer_db_channel_list[-1]))
+    # customer_db_channel_list = []
+    # customer_db_stub_list = []
+    # for host, port in CUSTOMER_DB_LIST[:CUSTOMER_DB_N]:
+    #     customer_db_channel_list.append(grpc.insecure_channel(host + ':' + port))
+    #     customer_db_stub_list.append(buyer_pb2_grpc.BuyerStub(customer_db_channel_list[-1]))
 
-    product_db_channel_list = []
-    product_db_stub_list = []
-    for host, port in PRODUCT_DB_LIST[:PRODUCT_DB_N]:
-        product_db_channel_list.append(grpc.insecure_channel(host + ':' + port))
-        product_db_stub_list.append(buyer_pb2_grpc.BuyerStub(product_db_channel_list[-1]))
+    # product_db_channel_list = []
+    # product_db_stub_list = []
+    # for host, port in PRODUCT_DB_LIST[:PRODUCT_DB_N]:
+    #     product_db_channel_list.append(grpc.insecure_channel(host + ':' + port))
+    #     product_db_stub_list.append(buyer_pb2_grpc.BuyerStub(product_db_channel_list[-1]))
         
 
-    add_dummy_data(server, customer_db_stub_list, product_db_stub_list)
+    # add_dummy_data(server, customer_db_stub_list, product_db_stub_list)
 
 
 

@@ -209,24 +209,21 @@ class AtomicBroadcaster:
     def __init__(self, id, node_list):
 
         self.server_id = id
-
         self.node_list = node_list
-
         self.num_nodes = len(self.node_list)
         
         self.prev_server_id = self.server_id - 1 if self.server_id > 0 else self.num_nodes - 1
         self.next_server_id = self.server_id + 1 if self.server_id < self.num_nodes - 1 else 0
 
-        # last global num delivered
+        # last global seq num that is delivered on this node
         self.local_seq_num = -1
+
+        # the max global seq num node have seen
         self.max_global_seq_num = -1
 
         # goes from local_seq_num to max_global_seq_num
         # tracks seq_num for which we have both req msg and seq msg wiht s <= seq_num
         self.seq_num_iter = -1 
-        
-
-        # self.node_wise_msgs = [-1] * self.num_nodes
 
 
         # maps node -> local_seq_num -> req_msg 
@@ -241,10 +238,6 @@ class AtomicBroadcaster:
         # stores current msg ids that have not been deilvered 
         self.curr_req_msg = set()
         self.curr_seq_msg = set()
-
-        self.curr_missing_msg = set()
-        self.curr_missing_global = set()
-
 
         # maintain a list of all delivered requests
         self.list_of_delivered_requests = []
@@ -279,9 +272,9 @@ class AtomicBroadcaster:
         ### simulate packet loss ###
         loss_ratio = 0.2
         if random.random() < loss_ratio:
-            print("!" * 30)
+            print("+!" * 30)
             print("DISCARDING PACKET")
-            print("!" * 30)
+            print("+!" * 30)
             raise TimeoutError
 
 
@@ -340,6 +333,7 @@ class AtomicBroadcaster:
                                                ret_msg_type)
         self.send_message(retransmit_msg, recv_node_id)
 
+
     def broadcast_retransmission_msg(self, msg_id, ret_msg_seq_num, ret_msg_type):
         retransmit_msg = RetransmissionMessage(self.server_id, 
                                                msg_id,
@@ -347,13 +341,16 @@ class AtomicBroadcaster:
                                                ret_msg_type)
         self.broadcast_message(retransmit_msg)
 
+
     def get_seq_num_assigner_id(self, id):
         return id % self.num_nodes
+
 
     def propose_new_req(self, request, func_name):
         msg_id = (self.server_id, self.local_seq_num)
         self.broadcast_request_message(msg_id, request, func_name)
         return msg_id
+
 
     def process_message(self, msg, node_id):
         
@@ -445,12 +442,9 @@ class AtomicBroadcaster:
         else:
             raise NotImplementedError
 
-
         # update max global seq based on meta data
         if msg.meta_data.max_global_seq_num > self.max_global_seq_num:
             self.max_global_seq_num = msg.meta_data.max_global_seq_num
-
-
 
 
     def consensus(self):
@@ -592,7 +586,7 @@ class AtomicBroadcaster:
     
     def deliver_requests(self, db, rpc_return_msg_id):
         
-        curr_response_dict = None
+        return_response_dict = None
 
         # deliver msgs in this range
         begin_seq_num = self.local_seq_num + 1
@@ -671,8 +665,8 @@ class AtomicBroadcaster:
             self.list_of_delivered_requests.append([s, msg_id, func_name])
 
             # keep current response_dict to return 
-            if rpc_return_msg_id is not None and msg_id == rpc_return_msg_id:
-                curr_response_dict = response_dict
+            if rpc_return_msg_id is not None and rpc_return_msg_id == msg_id:
+                return_response_dict = response_dict
         
 
         print("&" * 45)
@@ -684,7 +678,7 @@ class AtomicBroadcaster:
         print("&" * 45)
 
         # return curr response dict
-        return curr_response_dict
+        return return_response_dict
 
 
 
@@ -931,7 +925,6 @@ class BuyerServicer(buyer_pb2_grpc.BuyerServicer):
 
         self.atomic_broadcaster.lock.release()
 
-
         response = ParseDict(response_dict, buyer_pb2.BuyerResponse())
         return response
 
@@ -1088,19 +1081,11 @@ def start_server(args):
 
     host, port = CUSTOMER_DB_LIST[node_id]
 
-    print("=============================")
-    print("Server running")
-    print("Server type: CUSTOMER DB")
-    print("node id:", node_id)
-    print(host, port)
-    print("=============================")
-
-    
-
     # initialize db and server
     db = DBServer()
 
-    atomic_broadcaster = AtomicBroadcaster(node_id, CUSTOMER_DB_LIST[:CUSTOMER_DB_N])
+    atomic_broadcaster = AtomicBroadcaster(node_id, CUSTOMER_DB_PROTOCOL_LIST[:CUSTOMER_DB_N])
+
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=CUSTOMER_DB_MAX_WORKERS))
 
     # add services to server
@@ -1110,7 +1095,14 @@ def start_server(args):
     # add port and start server
     server.add_insecure_port(host + ':' + port)
     server.start()
-    
+
+    print("=============================")
+    print("Server running")
+    print("Server type: CUSTOMER DB")
+    print("node id:", node_id)
+    print(host, port)
+    print("=============================")
+
 
     while True:
         try:

@@ -286,14 +286,12 @@ class SellerClient:
 
 def start_client():
 
-    
 
     client = SellerClient()
 
     # ###############################call functions################################
 
     max_iterations = 10
-
 
 
     start_time = time.time()
