@@ -4,24 +4,6 @@
 Nikhil Barhate and Sriranga Kalkunte Ramaswamy
 
 
-### To Run
-
-```
-python3 -m customer_DB.customer_db --node_id 0
-python3 -m product_DB.product_db --node_id 0
-python3 -m server.buyer_server --node_id 0
-python3 -m server.seller_server --node_id 0
-python3 -m financial_transaction
-```
-
-```
-python3 -m client.seller_client
-python3 -m client.buyer_client
-
-python3 -m client.test_seller
-python3 -m client.test_buyer
-```
-
 ### Performance Numbers:
 
 #### Scenarios
@@ -104,6 +86,24 @@ python3 -m client.test_buyer
     - Atomic Broadcast protocol for Customer DB is slow and not optimized for performance
     - Little to no exception handling
 
+
+### To Run
+
+```
+python3 -m customer_DB.customer_db --node_id 0
+python3 -m product_DB.product_db --node_id 0
+python3 -m server.buyer_server --node_id 0
+python3 -m server.seller_server --node_id 0
+python3 -m financial_transaction
+```
+
+```
+python3 -m client.seller_client
+python3 -m client.buyer_client
+
+python3 -m client.test_seller
+python3 -m client.test_buyer
+```
 
 
 
