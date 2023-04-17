@@ -255,53 +255,44 @@ def handle_interface(client):
 
 def start_client():
     
-    client = BuyerClient()
-
-    # handle_interface(client)
-
-    # ###############################call functions################################
     max_iterations = 10
 
+    client = BuyerClient()
     start_time = time.time()
 
     for i in range(max_iterations):
 
-    #     response = client.create_account("username"+str(i), "password"+str(i), "name"+str(i))
-    #     response = client.login("username"+str(i), "password"+str(i))
-    #     response = client.add_to_cart("username"+str(i), i, 1)
-    #     response = client.view_cart("username"+str(i))
-    #     response = client.remove_cart("username"+str(i), i, 1)
-
-
         client.create_account("12345","1234","1234")
+        
         client.login("12345","1234")
 
+        client.add_to_cart("12345", 123445, 1)
 
-        client.add_to_cart("12345",123445,1)
         client.display_cart("12345")
 
-        #client.make_purchase("12345","12345678")
-        #client.get_purchase_history("12345")
+        client.make_purchase("12345", "12345678")
+
+        client.get_purchase_history("12345")
 
         client.clear_cart("12345")
 
-        keywords=["k1","k2","k3"]
+        keywords = ["k1","k2","k3"]
         
-        #client.search_items(0,keywords,"12345")
+        client.search_items(0, keywords, "12345")
 
         client.get_seller_rating("123")
+
         client.logout("12345")
 
         print(i, time.time() - start_time)
 
 
 
-
     end_time = time.time()
-    time_for_1000_apicalls = end_time - start_time
+    total_time = end_time - start_time
 
 
-    print(time_for_1000_apicalls)
+    print(total_time)
 
 
 

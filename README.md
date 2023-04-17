@@ -22,6 +22,126 @@ python3 -m client.test_seller
 python3 -m client.test_buyer
 ```
 
+### Performance Numbers:
+
+
+- Average response time for each client function when all replicas run normally (no failures).
+
+| seller client function | Avg Response Time (sec) |
+| --- | --- |
+| create_seller | 0 |
+| login_seller | 0 |
+| logout_seller | 0 |
+| get_seller_rating | 0 |
+| add_item | 0 |
+| remove_item | 0 |
+| change_price | 0 |
+| all_items_by_seller | 0 |
+
+
+| buyer client function | Avg Response Time (sec) |
+| --- | --- |
+| create_buyer | 0 |
+| login_buyer | 0 |
+| logout_buyer | 0 |
+| display_cart | 0 |
+| add_to_cart | 0 |
+| remove_cart | 0 |
+| clear_cart | 0 |
+| search_items | 0 |
+| get_purchase_history | 0 |
+| make_purchase | 0 |
+| get_seller_rating | 0 |
+
+
+
+- Average response time for each client function when one server-side sellers interface replica and one server-side buyers interface to which some of the clients are connected fail.
+
+| seller client function | Avg Response Time (sec) |
+| --- | --- |
+| create_seller | 0 |
+| login_seller | 0 |
+| logout_seller | 0 |
+| get_seller_rating | 0 |
+| add_item | 0 |
+| remove_item | 0 |
+| change_price | 0 |
+| all_items_by_seller | 0 |
+
+
+| buyer client function | Avg Response Time (sec) |
+| --- | --- |
+| create_buyer | 0 |
+| login_buyer | 0 |
+| logout_buyer | 0 |
+| display_cart | 0 |
+| add_to_cart | 0 |
+| remove_cart | 0 |
+| clear_cart | 0 |
+| search_items | 0 |
+| get_purchase_history | 0 |
+| make_purchase | 0 |
+| get_seller_rating | 0 |
+
+
+
+- Average response time for each client function when one product database replica (not the leader) fails.
+
+| seller client function | Avg Response Time (sec) |
+| --- | --- |
+| create_seller | 0 |
+| login_seller | 0 |
+| logout_seller | 0 |
+| get_seller_rating | 0 |
+| add_item | 0 |
+| remove_item | 0 |
+| change_price | 0 |
+| all_items_by_seller | 0 |
+
+
+| buyer client function | Avg Response Time (sec) |
+| --- | --- |
+| create_buyer | 0 |
+| login_buyer | 0 |
+| logout_buyer | 0 |
+| display_cart | 0 |
+| add_to_cart | 0 |
+| remove_cart | 0 |
+| clear_cart | 0 |
+| search_items | 0 |
+| get_purchase_history | 0 |
+| make_purchase | 0 |
+| get_seller_rating | 0 |
+
+
+
+- Average response time for each client function when the product database replica acting as leader fails.
+
+| seller client function | Avg Response Time (sec) |
+| --- | --- |
+| create_seller | 0 |
+| login_seller | 0 |
+| logout_seller | 0 |
+| get_seller_rating | 0 |
+| add_item | 0 |
+| remove_item | 0 |
+| change_price | 0 |
+| all_items_by_seller | 0 |
+
+
+| buyer client function | Avg Response Time (sec) |
+| --- | --- |
+| create_buyer | 0 |
+| login_buyer | 0 |
+| logout_buyer | 0 |
+| display_cart | 0 |
+| add_to_cart | 0 |
+| remove_cart | 0 |
+| clear_cart | 0 |
+| search_items | 0 |
+| get_purchase_history | 0 |
+| make_purchase | 0 |
+| get_seller_rating | 0 |
 
 
 
@@ -36,6 +156,9 @@ python3 -m client.test_buyer
 
 
 ### Things that work:
+
+    - Customer DB using atomic broadcast protocol
+    - Product DB using raft
 
     - seller side:
         - create a new seller account

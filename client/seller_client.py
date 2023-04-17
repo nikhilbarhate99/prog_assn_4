@@ -280,43 +280,25 @@ class SellerClient:
 
 
 
-
-
-
-
 def start_client():
-
-
-    client = SellerClient()
-
-    # ###############################call functions################################
 
     max_iterations = 10
 
 
+    client = SellerClient()
     start_time = time.time()
 
     for i in range(max_iterations):
-
 
         client.create_account("123","123","123")
 
         client.login("123","123")
 
-        # client.logout("123")
-
-        #['name', 'condition', 'category', 'price', 'keywords']
-
         item = {"name": "item2", 
-
                 "category" : 0, 
-
                 "condition" : "new", 
-
                 "keywords" : ("k1", "k2", "k3"), 
-
                 "price" : 100
-
                 }
 
         client.add_item("123",item,"12")
@@ -333,12 +315,12 @@ def start_client():
         print(i, time.time() - start_time)
 
 
-
-
-
     end_time = time.time()
 
-    print(end_time - start_time)
+    total_time = end_time - start_time
+
+    print(total_time)
+
 
 
 

@@ -145,9 +145,11 @@ class DBServer(SyncObj):
 
     @replicated_sync
     def search(self, prod_cat, keywords):
+
         prod_cat = int(prod_cat)
         if prod_cat not in self.product_data:
             return {"success": True, "items": dict()}
+        
         res_ids = set(self.product_data.get(prod_cat).keys())
         for kw in keywords:
             # res_ids = res_ids.intersection(self.search_data.get(kw))
@@ -199,7 +201,7 @@ class BuyerServicer(buyer_pb2_grpc.BuyerServicer):
         pass
 
     def search(self, request, context):
-        response_dict = _g_DB.search(request.prod_cat, request.keywords)
+        response_dict = _g_DB.search(request.prod_cat, list(request.keywords))
         response = ParseDict(response_dict, buyer_pb2.BuyerItemResponse())
         return response
     
@@ -222,19 +224,15 @@ def start_server(args):
 
     host, port = PRODUCT_DB_LIST[node_id]
 
-    raft_host, raft_port = PRODUCT_DB_RAFT_LIST[node_id]
-    other_raft_addresses = [addr for i, addr in enumerate(PRODUCT_DB_RAFT_LIST[:PRODUCT_DB_N]) if i != node_id]
+    raft_host, raft_port = PRODUCT_DB_PROTOCOL_LIST[node_id]
+    other_raft_addresses = [addr for i, addr in enumerate(PRODUCT_DB_PROTOCOL_LIST[:PRODUCT_DB_N]) if i != node_id]
 
     # extract host and port from other_raft_addresses
     other_raft_addresses = [addr[0] + ':' + addr[1] for addr in other_raft_addresses]
 
     # initialize db and server
-    # db = DBServer(host + ':' + port, other_raft_addresses)
-
-
     global _g_DB
     _g_DB = DBServer(raft_host + ':' + raft_port, other_raft_addresses)
-
 
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=PRODUCT_DB_MAX_WORKERS))
 
@@ -251,7 +249,7 @@ def start_server(args):
     print("Server type: PRODUCT DB")
     print("node id:", node_id)
     print(host, port)
-    print("raft", raft_host, raft_port, " --other nodes ", other_raft_addresses)
+    print("RAFT: ", raft_host, raft_port, " >> ", other_raft_addresses)
     print("=============================")
 
     server.wait_for_termination()
