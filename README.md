@@ -24,124 +24,42 @@ python3 -m client.test_buyer
 
 ### Performance Numbers:
 
+#### scenarios
 
-- Average response time for each client function when all replicas run normally (no failures).
-
-| seller client function | Avg Response Time (sec) |
-| --- | --- |
-| create_seller | 0 |
-| login_seller | 0 |
-| logout_seller | 0 |
-| get_seller_rating | 0 |
-| add_item | 0 |
-| remove_item | 0 |
-| change_price | 0 |
-| all_items_by_seller | 0 |
+1. Average response time for each client function when all replicas run normally (no failures).
+2. Average response time for each client function when one server-side sellers interface replica and one server-side buyers interface to which some of the clients are connected fail.
+3. Average response time for each client function when one product database replica (not the leader) fails.
+4. Average response time for each client function when the product database replica acting as leader fails.
 
 
-| buyer client function | Avg Response Time (sec) |
-| --- | --- |
-| create_buyer | 0 |
-| login_buyer | 0 |
-| logout_buyer | 0 |
-| display_cart | 0 |
-| add_to_cart | 0 |
-| remove_cart | 0 |
-| clear_cart | 0 |
-| search_items | 0 |
-| get_purchase_history | 0 |
-| make_purchase | 0 |
-| get_seller_rating | 0 |
+#### Average Response time (sec)
+
+| seller client function | scenario 1 | scenario 2 | scenario 3 | scenario 4 |
+| --- | --- | --- | --- | --- |
+| create_seller | 0 | 0 | 0 | 0 |
+| login_seller | 0 | 0 | 0 | 0 |
+| logout_seller | 0 | 0 | 0 | 0 |
+| get_seller_rating | 0 | 0 | 0 | 0 |
+| add_item | 0 | 0 | 0 | 0 |
+| remove_item | 0 | 0 | 0 | 0 |
+| change_price | 0 | 0 | 0 | 0 |
+| all_items_by_seller | 0 | 0 | 0 | 0 |
 
 
+| buyer client function | scenario 1 | scenario 2 | scenario 3 | scenario 4 |
+| --- | --- | --- | --- | --- |
+| create_buyer | 0 | 0 | 0 | 0 |
+| login_buyer | 0 | 0 | 0 | 0 |
+| logout_buyer | 0 | 0 | 0 | 0 |
+| display_cart | 0 | 0 | 0 | 0 |
+| add_to_cart | 0 | 0 | 0 | 0 |
+| remove_cart | 0 | 0 | 0 | 0 |
+| clear_cart | 0 | 0 | 0 | 0 |
+| search_items | 0 | 0 | 0 | 0 |
+| get_purchase_history | 0 | 0 | 0 | 0 |
+| make_purchase | 0 | 0 | 0 | 0 |
+| get_seller_rating | 0 | 0 | 0 | 0 |
 
-- Average response time for each client function when one server-side sellers interface replica and one server-side buyers interface to which some of the clients are connected fail.
-
-| seller client function | Avg Response Time (sec) |
-| --- | --- |
-| create_seller | 0 |
-| login_seller | 0 |
-| logout_seller | 0 |
-| get_seller_rating | 0 |
-| add_item | 0 |
-| remove_item | 0 |
-| change_price | 0 |
-| all_items_by_seller | 0 |
-
-
-| buyer client function | Avg Response Time (sec) |
-| --- | --- |
-| create_buyer | 0 |
-| login_buyer | 0 |
-| logout_buyer | 0 |
-| display_cart | 0 |
-| add_to_cart | 0 |
-| remove_cart | 0 |
-| clear_cart | 0 |
-| search_items | 0 |
-| get_purchase_history | 0 |
-| make_purchase | 0 |
-| get_seller_rating | 0 |
-
-
-
-- Average response time for each client function when one product database replica (not the leader) fails.
-
-| seller client function | Avg Response Time (sec) |
-| --- | --- |
-| create_seller | 0 |
-| login_seller | 0 |
-| logout_seller | 0 |
-| get_seller_rating | 0 |
-| add_item | 0 |
-| remove_item | 0 |
-| change_price | 0 |
-| all_items_by_seller | 0 |
-
-
-| buyer client function | Avg Response Time (sec) |
-| --- | --- |
-| create_buyer | 0 |
-| login_buyer | 0 |
-| logout_buyer | 0 |
-| display_cart | 0 |
-| add_to_cart | 0 |
-| remove_cart | 0 |
-| clear_cart | 0 |
-| search_items | 0 |
-| get_purchase_history | 0 |
-| make_purchase | 0 |
-| get_seller_rating | 0 |
-
-
-
-- Average response time for each client function when the product database replica acting as leader fails.
-
-| seller client function | Avg Response Time (sec) |
-| --- | --- |
-| create_seller | 0 |
-| login_seller | 0 |
-| logout_seller | 0 |
-| get_seller_rating | 0 |
-| add_item | 0 |
-| remove_item | 0 |
-| change_price | 0 |
-| all_items_by_seller | 0 |
-
-
-| buyer client function | Avg Response Time (sec) |
-| --- | --- |
-| create_buyer | 0 |
-| login_buyer | 0 |
-| logout_buyer | 0 |
-| display_cart | 0 |
-| add_to_cart | 0 |
-| remove_cart | 0 |
-| clear_cart | 0 |
-| search_items | 0 |
-| get_purchase_history | 0 |
-| make_purchase | 0 |
-| get_seller_rating | 0 |
 
 
 
