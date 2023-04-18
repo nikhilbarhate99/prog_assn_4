@@ -18,29 +18,29 @@ Nikhil Barhate and Sriranga Kalkunte Ramaswamy
 
 | seller client function | scenario 1 | scenario 2 | scenario 3 | scenario 4 |
 | --- | --- | --- | --- | --- |
-| create_seller | 0 | 0 | 0 | 0 |
-| login_seller | 0 | 0 | 0 | 0 |
-| logout_seller | 0 | 0 | 0 | 0 |
-| get_seller_rating | 0 | 0 | 0 | 0 |
-| add_item | 0 | 0 | 0 | 0 |
-| remove_item | 0 | 0 | 0 | 0 |
-| change_price | 0 | 0 | 0 | 0 |
-| all_items_by_seller | 0 | 0 | 0 | 0 |
+| create_seller | 0.474436 | 0 | 0 | 0 |
+| login_seller | 0.414926 | 0 | 0 | 0 |
+| logout_seller | 0.471316 | 0 | 0 | 0 |
+| get_seller_rating | 0.413295 | 0 | 0 | 0 |
+| add_item | 0.481851 | 0 | 0 | 0 |
+| remove_item | 0.445516 | 0 | 0 | 0 |
+| change_price | 0.407842 | 0 | 0 | 0 |
+| all_items_by_seller | 0.406970 | 0 | 0 | 0 |
 
 
 | buyer client function | scenario 1 | scenario 2 | scenario 3 | scenario 4 |
 | --- | --- | --- | --- | --- |
-| create_buyer | 0 | 0 | 0 | 0 |
-| login_buyer | 0 | 0 | 0 | 0 |
-| logout_buyer | 0 | 0 | 0 | 0 |
-| display_cart | 0 | 0 | 0 | 0 |
-| add_to_cart | 0 | 0 | 0 | 0 |
-| remove_cart | 0 | 0 | 0 | 0 |
-| clear_cart | 0 | 0 | 0 | 0 |
-| search_items | 0 | 0 | 0 | 0 |
-| get_purchase_history | 0 | 0 | 0 | 0 |
-| make_purchase | 0 | 0 | 0 | 0 |
-| get_seller_rating | 0 | 0 | 0 | 0 |
+| create_buyer | 0.406699 | 0 | 0 | 0 |
+| login_buyer | 0.447198 | 0 | 0 | 0 |
+| logout_buyer | 0.422077 | 0 | 0 | 0 |
+| display_cart | 0.414161 | 0 | 0 | 0 |
+| add_to_cart | 0.525875 | 0 | 0 | 0 |
+| remove_cart | 0.436251 | 0 | 0 | 0 |
+| clear_cart | 0.413526 | 0 | 0 | 0 |
+| search_items | 0.370387 | 0 | 0 | 0 |
+| get_purchase_history | 0.409650 | 0 | 0 | 0 |
+| make_purchase | 0.568279 | 0 | 0 | 0 |
+| get_seller_rating | 0.397811 | 0 | 0 | 0 |
 
 
 
