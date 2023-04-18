@@ -15,3 +15,4 @@ spyne==2.14.0
 suds==1.1.2
 urllib3==1.26.12
 virtualenv==20.16.4
+pysyncobj==0.3.12
