@@ -12,32 +12,35 @@ class SellerClient:
 
     def create_account(self, username, password, name):
 
-        request = {"action": "create_seller", "username": username, "password": password, "name":name}
+        for _ in range(CLIENT_RETRIES_N):
+            request = {"action": "create_seller", "username": username, "password": password, "name":name}
 
-        host, port = random.choice(SELLER_SERVER_LIST[:SELLER_SERVER_N])
-        port = int(port)
+            host, port = random.choice(SELLER_SERVER_LIST[:SELLER_SERVER_N])
+            port = int(port)
 
-        conn = http.client.HTTPConnection(host, port, timeout=HTTP_TIME_OUT)
+            conn = http.client.HTTPConnection(host, port, timeout=HTTP_TIME_OUT)
 
-        headers = {'Content-type': 'application/json'}
+            headers = {'Content-type': 'application/json'}
 
-        conn.request('POST', '/create_seller', body=json.dumps(request), headers=headers)
+            conn.request('POST', '/create_seller', body=json.dumps(request), headers=headers)
 
-        response = conn.getresponse()
+            response = conn.getresponse()
+            conn.close()
 
-        if response.status == 200:
+            if response.status == 200:
 
-            response_body = response.read().decode()
+                response_body = response.read().decode()
 
-            response_data = json.loads(response_body)
+                response_data = json.loads(response_body)
 
-            #print(response_data["message"])
+                #print(response_data["message"])
+                break
+                
+            else:
 
-        else:
+                response_data = {"success": False, "message": "No response from server"}
 
-            response_data = {"success": False, "message": "No response from server"}
-
-        conn.close()
+            
 
         return response_data
 
@@ -45,32 +48,37 @@ class SellerClient:
 
     def login(self, username, password):
 
-        request = {"action": "login_seller", "username": username, "password": password}
+        for _ in range(CLIENT_RETRIES_N):
+                
+            request = {"action": "login_seller", "username": username, "password": password}
 
-        host, port = random.choice(SELLER_SERVER_LIST[:SELLER_SERVER_N])
-        port = int(port)
+            host, port = random.choice(SELLER_SERVER_LIST[:SELLER_SERVER_N])
+            port = int(port)
 
-        conn = http.client.HTTPConnection(host, port, timeout=HTTP_TIME_OUT)
+            conn = http.client.HTTPConnection(host, port, timeout=HTTP_TIME_OUT)
 
-        headers = {'Content-type': 'application/json'}
+            headers = {'Content-type': 'application/json'}
 
-        conn.request('POST', '/login_seller', body=json.dumps(request), headers=headers)
+            conn.request('POST', '/login_seller', body=json.dumps(request), headers=headers)
 
-        response = conn.getresponse()
+            response = conn.getresponse()
+            conn.close()
+            
 
-        if response.status == 200:
+            if response.status == 200:
 
-            response_body = response.read().decode()
+                response_body = response.read().decode()
 
-            response_data = json.loads(response_body)
+                response_data = json.loads(response_body)
 
-            #print(response_data["message"])
+                #print(response_data["message"])
+                break
 
-        else:
+            else:
 
-            response_data = {"success": False, "message": "No response from server"}
+                response_data = {"success": False, "message": "No response from server"}
 
-        conn.close()
+            
 
         return response_data
 
@@ -78,32 +86,37 @@ class SellerClient:
 
     def logout(self, username):
 
-        request = {"action": "logout_seller", "username": username}
+        for _ in range(CLIENT_RETRIES_N):
+                
+            request = {"action": "logout_seller", "username": username}
 
-        host, port = random.choice(SELLER_SERVER_LIST[:SELLER_SERVER_N])
-        port = int(port)
+            host, port = random.choice(SELLER_SERVER_LIST[:SELLER_SERVER_N])
+            port = int(port)
 
-        conn = http.client.HTTPConnection(host, port, timeout=HTTP_TIME_OUT)
+            conn = http.client.HTTPConnection(host, port, timeout=HTTP_TIME_OUT)
 
-        headers = {'Content-type': 'application/json'}
+            headers = {'Content-type': 'application/json'}
 
-        conn.request('POST', '/logout_seller', body=json.dumps(request), headers=headers)
+            conn.request('POST', '/logout_seller', body=json.dumps(request), headers=headers)
 
-        response = conn.getresponse()
+            response = conn.getresponse()
+            conn.close()
+            
 
-        if response.status == 200:
+            if response.status == 200:
 
-            response_body = response.read().decode()
+                response_body = response.read().decode()
 
-            response_data = json.loads(response_body)
+                response_data = json.loads(response_body)
 
-#            print(response_data["message"])
+    #            print(response_data["message"])
+                break
 
-        else:
+            else:
 
-            response_data = {"success": False, "message": "No response from server"}
+                response_data = {"success": False, "message": "No response from server"}
 
-        conn.close()
+            
 
         return response_data
 
@@ -111,34 +124,39 @@ class SellerClient:
 
     def get_seller_rating(self, username):
 
-        request = {"action": "get_seller_rating", "username": username}
-        
-        host, port = random.choice(SELLER_SERVER_LIST[:SELLER_SERVER_N])
-        port = int(port)
+        for _ in range(CLIENT_RETRIES_N):
+                
+            request = {"action": "get_seller_rating", "username": username}
+            
+            host, port = random.choice(SELLER_SERVER_LIST[:SELLER_SERVER_N])
+            port = int(port)
 
-        conn = http.client.HTTPConnection(host, port, timeout=HTTP_TIME_OUT)
+            conn = http.client.HTTPConnection(host, port, timeout=HTTP_TIME_OUT)
 
-        headers = {'Content-type': 'application/json'}
+            headers = {'Content-type': 'application/json'}
 
-        conn.request('POST', '/get_seller_rating', body=json.dumps(request), headers=headers)
+            conn.request('POST', '/get_seller_rating', body=json.dumps(request), headers=headers)
 
-        response = conn.getresponse()
+            response = conn.getresponse()
+            conn.close()
+            
 
-        if response.status == 200:
+            if response.status == 200:
 
-            response_body = response.read().decode()
+                response_body = response.read().decode()
 
-            response_data = json.loads(response_body)
+                response_data = json.loads(response_body)
 
-#            print("positive:"+ str(response_data["ratingPos"]) )
+    #            print("positive:"+ str(response_data["ratingPos"]) )
 
- #           print("negative:"+ str(response_data["ratingNeg"]) )
+    #           print("negative:"+ str(response_data["ratingNeg"]) )
+                break
 
-        else:
+            else:
 
-            response_data = {"success": False, "message": "No response from server"}
+                response_data = {"success": False, "message": "No response from server"}
 
-        conn.close()
+            
 
         return response_data
 
@@ -146,32 +164,37 @@ class SellerClient:
 
     def add_item(self, username, item, quantity):
 
-        request = {"action": "add_item", "item": item, "quantity":quantity,"username":username}
+        for _ in range(CLIENT_RETRIES_N):
+                
+            request = {"action": "add_item", "item": item, "quantity":quantity,"username":username}
 
-        host, port = random.choice(SELLER_SERVER_LIST[:SELLER_SERVER_N])
-        port = int(port)
+            host, port = random.choice(SELLER_SERVER_LIST[:SELLER_SERVER_N])
+            port = int(port)
 
-        conn = http.client.HTTPConnection(host, port, timeout=HTTP_TIME_OUT)
+            conn = http.client.HTTPConnection(host, port, timeout=HTTP_TIME_OUT)
 
-        headers = {'Content-type': 'application/json'}
+            headers = {'Content-type': 'application/json'}
 
-        conn.request('POST', '/add_item', body=json.dumps(request), headers=headers)
+            conn.request('POST', '/add_item', body=json.dumps(request), headers=headers)
 
-        response = conn.getresponse()
+            response = conn.getresponse()
+            conn.close()
+            
 
-        if response.status == 200:
+            if response.status == 200:
 
-            response_body = response.read().decode()
+                response_body = response.read().decode()
 
-            response_data = json.loads(response_body)
+                response_data = json.loads(response_body)
 
-  #          print(response_data["message"])
+    #          print(response_data["message"])
+                break
 
-        else:
+            else:
 
-            response_data = {"success": False, "message": "No response from server"}
+                response_data = {"success": False, "message": "No response from server"}
 
-        conn.close()
+            
 
         return response_data
 
@@ -179,32 +202,37 @@ class SellerClient:
 
     def remove_item(self,  prod_id, quantity,username):
 
-        request = {"action": "remove_item", "prod_id": prod_id, "quantity": quantity,"username":username}
+        for _ in range(CLIENT_RETRIES_N):
+                
+            request = {"action": "remove_item", "prod_id": prod_id, "quantity": quantity,"username":username}
 
-        host, port = random.choice(SELLER_SERVER_LIST[:SELLER_SERVER_N])
-        port = int(port)
+            host, port = random.choice(SELLER_SERVER_LIST[:SELLER_SERVER_N])
+            port = int(port)
 
-        conn = http.client.HTTPConnection(host, port, timeout=HTTP_TIME_OUT)
+            conn = http.client.HTTPConnection(host, port, timeout=HTTP_TIME_OUT)
 
-        headers = {'Content-type': 'application/json'}
+            headers = {'Content-type': 'application/json'}
 
-        conn.request('POST', '/remove_item', body=json.dumps(request), headers=headers)
+            conn.request('POST', '/remove_item', body=json.dumps(request), headers=headers)
 
-        response = conn.getresponse()
+            response = conn.getresponse()
+            conn.close()
+            
 
-        if response.status == 200:
+            if response.status == 200:
 
-            response_body = response.read().decode()
+                response_body = response.read().decode()
 
-            response_data = json.loads(response_body)
+                response_data = json.loads(response_body)
 
-#            print(response_data["message"])
+    #            print(response_data["message"])
+                break
 
-        else:
+            else:
 
-            response_data = {"success": False, "message": "No response from server"}
+                response_data = {"success": False, "message": "No response from server"}
 
-        conn.close()
+            
 
         return response_data
 
@@ -214,32 +242,37 @@ class SellerClient:
 
     def change_price(self, prod_id, new_price,username):
 
-        request = {"action": "change_price", "prod_id": prod_id,"new_price": new_price,"username":username}
+        for _ in range(CLIENT_RETRIES_N):
+                
+            request = {"action": "change_price", "prod_id": prod_id,"new_price": new_price,"username":username}
 
-        host, port = random.choice(SELLER_SERVER_LIST[:SELLER_SERVER_N])
-        port = int(port)
+            host, port = random.choice(SELLER_SERVER_LIST[:SELLER_SERVER_N])
+            port = int(port)
 
-        conn = http.client.HTTPConnection(host, port, timeout=HTTP_TIME_OUT)
+            conn = http.client.HTTPConnection(host, port, timeout=HTTP_TIME_OUT)
 
-        headers = {'Content-type': 'application/json'}
+            headers = {'Content-type': 'application/json'}
 
-        conn.request('POST', '/change_price', body=json.dumps(request), headers=headers)
+            conn.request('POST', '/change_price', body=json.dumps(request), headers=headers)
 
-        response = conn.getresponse()
+            response = conn.getresponse()
+            conn.close()
+            
 
-        if response.status == 200:
+            if response.status == 200:
 
-            response_body = response.read().decode()
+                response_body = response.read().decode()
 
-            response_data = json.loads(response_body)
+                response_data = json.loads(response_body)
 
- #           print(response_data["message"])
+    #           print(response_data["message"])
+                break
 
-        else:
+            else:
 
-            response_data = {"success": False, "message": "No response from server"}
+                response_data = {"success": False, "message": "No response from server"}
 
-        conn.close()
+            
 
         return response_data
 
@@ -249,32 +282,37 @@ class SellerClient:
 
     def all_items_by_seller(self, username):
 
-        request = {"action": "all_items_by_seller", "username": username}
+        for _ in range(CLIENT_RETRIES_N):
+                
+            request = {"action": "all_items_by_seller", "username": username}
 
-        host, port = random.choice(SELLER_SERVER_LIST[:SELLER_SERVER_N])
-        port = int(port)
+            host, port = random.choice(SELLER_SERVER_LIST[:SELLER_SERVER_N])
+            port = int(port)
 
-        conn = http.client.HTTPConnection(host, port, timeout=HTTP_TIME_OUT)
+            conn = http.client.HTTPConnection(host, port, timeout=HTTP_TIME_OUT)
 
-        headers = {'Content-type': 'application/json'}
+            headers = {'Content-type': 'application/json'}
 
-        conn.request('POST', '/all_items_by_seller', body=json.dumps(request), headers=headers)
+            conn.request('POST', '/all_items_by_seller', body=json.dumps(request), headers=headers)
 
-        response = conn.getresponse()
+            response = conn.getresponse()
+            conn.close()
+            
 
-        if response.status == 200:
+            if response.status == 200:
 
-            response_body = response.read().decode()
+                response_body = response.read().decode()
 
-            response_data = json.loads(response_body)
+                response_data = json.loads(response_body)
 
-  #          print(response_data)
+    #          print(response_data)
+                break
 
-        else:
+            else:
 
-            response_data = {"success": False, "message": "No response from server"}
+                response_data = {"success": False, "message": "No response from server"}
 
-        conn.close()
+            
 
         return response_data
 
