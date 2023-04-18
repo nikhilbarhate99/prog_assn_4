@@ -270,15 +270,15 @@ def start_client():
 
         client.display_cart("12345")
 
-        client.make_purchase("12345", "12345678")
+        # client.make_purchase("12345", "12345678")
 
-        client.get_purchase_history("12345")
+        # client.get_purchase_history("12345")
 
         client.clear_cart("12345")
 
-        keywords = ["k1","k2","k3"]
+        # keywords = ["k1","k2","k3"]
         
-        client.search_items(0, keywords, "12345")
+        # client.search_items(0, keywords, "12345")
 
         client.get_seller_rating("123")
 

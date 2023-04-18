@@ -52,7 +52,7 @@ Nikhil Barhate and Sriranga Kalkunte Ramaswamy
     3. Customer DB is replicated using a custom Atomic Broadcast protocol
     4. This protocol assumes only transient communication failures (i.e. no partition and no process failure)
     5. A global sequence number 's' is assigned by node with id, s % num_nodes.
-    6. With these assumptions, a RPC request with assigned global sequence cannot be lost, hence a majority check is not necessary before delivering a msg and is not implemented.
+    6. With these assumptions, a RPC request with assigned global sequence cannot be lost, hence a majority check is not necessary before delivering a msg.
 
 
 ### Things that work:

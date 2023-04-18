@@ -211,7 +211,8 @@ class AtomicBroadcaster:
         self.server_id = id
         self.node_list = node_list
         self.num_nodes = len(self.node_list)
-        
+        self.majority_num_nodes = (self.num_nodes // 2) + 1 # for majority check
+
         self.prev_server_id = self.server_id - 1 if self.server_id > 0 else self.num_nodes - 1
         self.next_server_id = self.server_id + 1 if self.server_id < self.num_nodes - 1 else 0
 
@@ -224,6 +225,8 @@ class AtomicBroadcaster:
         # goes from local_seq_num to max_global_seq_num
         # tracks seq_num for which we have both req msg and seq msg wiht s <= seq_num
         self.seq_num_iter = -1 
+
+        self.all_node_max_seq_num_iter = [-1] * self.num_nodes
 
         # maps node -> local_seq_num -> req_msg 
         self.request_msg_buffer = dict()
@@ -413,6 +416,17 @@ class AtomicBroadcaster:
         if msg.meta_data.max_global_seq_num > self.max_global_seq_num:
             self.max_global_seq_num = msg.meta_data.max_global_seq_num
 
+        # update max seq iter for that node
+        self.all_node_max_seq_num_iter[sender_id] = max(self.all_node_max_seq_num_iter[sender_id], msg.meta_data.seq_num_iter)
+
+
+    def check_majority(self, seq_num):
+        count = 0
+        for id in range(self.num_nodes):
+            if self.all_node_max_seq_num_iter[id] >= seq_num:
+                count += 1
+        return count >= self.majority_num_nodes
+
 
     def consensus(self):
         consensus_reached = False
@@ -424,8 +438,10 @@ class AtomicBroadcaster:
                 consensus_reached = True
                 break
 
+
             ###### send msgs ######
             assert self.seq_num_iter < self.max_global_seq_num or len(self.curr_req_msg) > 0, 'seq_msg_iter cannot be >= max_global_seq_num'
+
 
             next_seq_num_iter =  self.seq_num_iter + 1
             next_node_id = self.get_seq_num_assigner_id(next_seq_num_iter)
@@ -451,6 +467,8 @@ class AtomicBroadcaster:
                     # if both req and seq msg present in buffer, then move to next seq num
                     else:
                         self.seq_num_iter = next_seq_num_iter
+                        # update max seq iter for this node
+                        self.all_node_max_seq_num_iter[self.server_id] = next_seq_num_iter
 
             ## if there are requests without assigned global numbers
             ## then assign it or ask for them to other peers
@@ -465,6 +483,7 @@ class AtomicBroadcaster:
                     
                     # this seq num has been handled, so move to next seq num
                     self.seq_num_iter = next_seq_num_iter
+                    self.all_node_max_seq_num_iter[self.server_id] = next_seq_num_iter
 
                 ## either the node that has to assign the global seq num has not received the request msg
                 ## or this node has not received the assigned seq msg
