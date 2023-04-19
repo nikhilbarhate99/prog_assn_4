@@ -180,7 +180,11 @@ class MetaData:
         self.local_seq_num = local_seq_num
         self.seq_num_iter = seq_num_iter
         self.all_node_max_seq_num_iter = all_node_max_seq_num_iter
-        
+
+class DummyMessage:
+    def __init__(self, meta_data=None):
+        self.meta_data = meta_data
+
 class RequestMessage:
     def __init__(self, sender_id, msg_id, data, func_name, meta_data=None):
         self.sender_id = sender_id
@@ -201,8 +205,8 @@ class RetransmissionMessage:
         self.sender_id = sender_id
         self.ret_msg_id = ret_msg_id
         self.ret_msg_seq_num = ret_msg_seq_num
-        self.ret_msg_type = ret_msg_type # 'request_msg' or 'sequence_msg' or 'sequence_msg_via_num'
-        assert ret_msg_type in {'request_msg', 'sequence_msg', 'sequence_msg_via_num'}, 'unknown ret_msg_type in Retransmission msg'
+        self.ret_msg_type = ret_msg_type # 'request_msg' or 'sequence_msg' or 'sequence_msg_via_num' or 'dummy_msg'
+        assert ret_msg_type in {'request_msg', 'sequence_msg', 'sequence_msg_via_num', 'dummy_msg'}, 'unknown ret_msg_type in Retransmission msg'
         self.meta_data = meta_data
 
 class AtomicBroadcaster:
@@ -254,6 +258,7 @@ class AtomicBroadcaster:
 
     def add_meta_data_to_msg(self, msg):
         # set meta data 
+        self.all_node_max_seq_num_iter[self.server_id] = self.seq_num_iter
         meta_data = MetaData(max_global_seq_num=self.max_global_seq_num, 
                              local_seq_num=self.local_seq_num,
                              seq_num_iter=self.seq_num_iter,
@@ -342,6 +347,8 @@ class AtomicBroadcaster:
                                                ret_msg_type)
         self.broadcast_message(retransmit_msg)
 
+    def broadcast_dummy_msg(self):
+        self.broadcast_message(DummyMessage())
 
     def get_seq_num_assigner_id(self, id):
         return id % self.num_nodes
@@ -408,8 +415,16 @@ class AtomicBroadcaster:
                 # send the msg to sender
                 self.send_message(ret_msg, msg.sender_id)
 
+            elif msg.ret_msg_type == 'dummy_msg':
+                self.send_message(DummyMessage(), msg.sender_id)
+
             else:
                 NotImplementedError
+
+        elif type(msg) == DummyMessage:
+            ## meta data is updated for all messages at the end of this function
+            pass
+
         else:
             raise NotImplementedError
 
@@ -422,6 +437,18 @@ class AtomicBroadcaster:
             self.all_node_max_seq_num_iter[id] = max(self.all_node_max_seq_num_iter[id], msg.meta_data.all_node_max_seq_num_iter[id])
 
 
+        print("-" * 5)
+        print(type(msg))
+        print(sender_id)
+        print(msg.meta_data.all_node_max_seq_num_iter)
+
+        print(self.all_node_max_seq_num_iter)
+        print('seq_num_iter', self.seq_num_iter, self.check_majority(self.seq_num_iter))
+        print('max_global_seq_num', self.max_global_seq_num, self.check_majority(self.max_global_seq_num))
+        print("-" * 5)
+
+
+
     def check_majority(self, seq_num):
         count = 0
         for id in range(self.num_nodes):
@@ -432,12 +459,16 @@ class AtomicBroadcaster:
 
     def consensus(self):
         consensus_reached = False
+        iteration = 0
 
         while not consensus_reached:
 
             ###### check consensus conditions ######
-            if self.seq_num_iter == self.max_global_seq_num and self.curr_req_msg == self.curr_seq_msg:
-                consensus_reached = True
+            consensus_reached = self.seq_num_iter == self.max_global_seq_num and self.curr_req_msg == self.curr_seq_msg and self.check_majority(self.seq_num_iter)
+            
+            
+            ###### if consensus is reached then break ######
+            if consensus_reached:
                 break
 
 
@@ -469,8 +500,7 @@ class AtomicBroadcaster:
                     # if both req and seq msg present in buffer, then move to next seq num
                     else:
                         self.seq_num_iter = next_seq_num_iter
-                        # update max seq iter for this node
-                        self.all_node_max_seq_num_iter[self.server_id] = next_seq_num_iter
+
 
             ## if there are requests without assigned global numbers
             ## then assign it or ask for them to other peers
@@ -485,7 +515,7 @@ class AtomicBroadcaster:
                     
                     # this seq num has been handled, so move to next seq num
                     self.seq_num_iter = next_seq_num_iter
-                    self.all_node_max_seq_num_iter[self.server_id] = next_seq_num_iter
+
 
                 ## either the node that has to assign the global seq num has not received the request msg
                 ## or this node has not received the assigned seq msg
@@ -496,7 +526,7 @@ class AtomicBroadcaster:
                     node, local_seq_num = next_msg_id
                     
                     # send request msg
-                    if random.random() < 0.5:
+                    if iteration % 2 == 0:
                         # send the msg to sender
                         ret_msg = self.request_msg_buffer[node][local_seq_num]
                         self.broadcast_message(ret_msg)
@@ -506,12 +536,22 @@ class AtomicBroadcaster:
                         # send the msg to sender
                         self.broadcast_retransmission_msg(next_msg_id, None, 'sequence_msg')
 
+            ## wait for majority nodes to receive message
+            ## broadcast dummy msg so other nodes can update meta data
+            ## or ask other nodes for retransmission of dummy data
+            elif not self.check_majority(self.seq_num_iter):
+                if iteration % 2 == 0:
+                    self.broadcast_dummy_msg()
+                else:
+                    self.broadcast_retransmission_msg(None, None, 'dummy_msg')
+
 
             ##### wait for some time for replies ######
             time.sleep(RECEIVE_LOOP_DELAY)
 
             ###### receive and process msgs ######
-            for _ in range(3):
+            ## self.num_nodes messages is a heuristic
+            for _ in range(self.num_nodes):
                 try:
                     msg, sender_id = self.recv_message()
                     self.process_message(msg, sender_id)
@@ -519,6 +559,10 @@ class AtomicBroadcaster:
                 except Exception as e:
                     # print("In Consensus while loop exception occurred: ", e)
                     pass
+            
+            
+            iteration += 1
+
         
         # clear current not delivered messages buffers
         self.curr_req_msg.clear()
