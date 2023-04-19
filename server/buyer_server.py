@@ -246,27 +246,83 @@ class BuyerRequestHandler(BaseHTTPRequestHandler):
         #print(action)
 
         if action == "create_buyer":
-            response = server.create_buyer(request, customer_db_stub_list, product_db_stub_list)
+            for _ in range(SERVER_RETRIES_N):
+                try:
+                    response = server.create_buyer(request, customer_db_stub_list, product_db_stub_list)
+                    break
+                except:
+                    response = {"success": False, "message": "server disconnected"}
+
         elif action == "login_buyer":
-            response = server.login_buyer(request, customer_db_stub_list, product_db_stub_list)
+            for _ in range(SERVER_RETRIES_N):
+                try:
+                    response = server.login_buyer(request, customer_db_stub_list, product_db_stub_list)
+                    break
+                except:
+                    response = {"success": False, "message": "server disconnected"}
         elif action == "logout_buyer":
-            response = server.logout_buyer(request, customer_db_stub_list, product_db_stub_list)
+            for _ in range(SERVER_RETRIES_N):
+                try:
+                    response = server.logout_buyer(request, customer_db_stub_list, product_db_stub_list)
+                    break
+                except:
+                    response = {"success": False, "message": "server disconnected"}
         elif action == "add_to_cart":
-            response = server.add_cart(request, customer_db_stub_list, product_db_stub_list)
+            for _ in range(SERVER_RETRIES_N):
+                try:
+                    response = server.add_cart(request, customer_db_stub_list, product_db_stub_list)
+                    break
+                except:
+                    response = {"success": False, "message": "server disconnected"}
         elif action == "remove_cart":
-            response = server.remove_cart(request, customer_db_stub_list, product_db_stub_list)
+            for _ in range(SERVER_RETRIES_N):
+                try:
+                    response = server.remove_cart(request, customer_db_stub_list, product_db_stub_list)
+                    break
+                except:
+                    response = {"success": False, "message": "server disconnected"}
         elif action == "display_cart":
-            response = server.display_cart(request, customer_db_stub_list, product_db_stub_list)
+            for _ in range(SERVER_RETRIES_N):
+                try:
+                    response = server.display_cart(request, customer_db_stub_list, product_db_stub_list)
+                    break
+                except:
+                    response = {"success": False, "message": "server disconnected"}
         elif action == "clear_cart":
-            response = server.clear_cart(request, customer_db_stub_list, product_db_stub_list)    
+            for _ in range(SERVER_RETRIES_N):
+                try:
+                    response = server.clear_cart(request, customer_db_stub_list, product_db_stub_list)
+                    break    
+                except:
+                    response = {"success": False, "message": "server disconnected"}
         elif action == "search":
-            response = server.search(request, customer_db_stub_list, product_db_stub_list)
+            for _ in range(SERVER_RETRIES_N):
+                try:
+                    response = server.search(request, customer_db_stub_list, product_db_stub_list)
+                    break
+                except:
+                    response = {"success": False, "message": "server disconnected"}
         elif action == "get_purchase_history":
-            response = server.get_purchase_history(request, customer_db_stub_list, product_db_stub_list)
+            for _ in range(SERVER_RETRIES_N):
+                try:
+                    response = server.get_purchase_history(request, customer_db_stub_list, product_db_stub_list)
+                    break
+                except:
+                    response = {"success": False, "message": "server disconnected"}
         elif action == "get_seller_rating":
-            response = server.get_seller_rating(request, customer_db_stub_list, product_db_stub_list)
+            for _ in range(SERVER_RETRIES_N):
+                try:
+                    response = server.get_seller_rating(request, customer_db_stub_list, product_db_stub_list)
+                    break
+                except:
+                    response = {"success": False, "message": "server disconnected"}
         elif action == "make_purchase":
-            response = server.make_purchase(request, customer_db_stub_list, product_db_stub_list)
+            for _ in range(SERVER_RETRIES_N):
+                try:
+                    response = server.make_purchase(request, customer_db_stub_list, product_db_stub_list)
+                    break
+                except:
+                    response = {"success": False, "message": "server disconnected"}
         else:
             response = {"success": False, "message": "Invalid action"}
 
@@ -478,6 +534,8 @@ def add_dummy_data(server, customer_db_stub, product_db_stub):
 
 ## FOR TESTING ONLY
 def handle_request(server, request, customer_db_stub, product_db_stub):
+
+    print("handle_request() does not implement multiple retries !!")
 
     action = request.get("action")
     request.pop("action")

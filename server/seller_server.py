@@ -168,21 +168,62 @@ class SellerRequestHandler(BaseHTTPRequestHandler):
 
 
         if action == "create_seller":
-            response = server.create_seller(request, customer_db_stub_list, product_db_stub_list)
+            for _ in range(SERVER_RETRIES_N):
+                try:
+                    response = server.create_seller(request, customer_db_stub_list, product_db_stub_list)
+                    break
+                except:
+                    response = {"success": False, "message": "server disconnected"}
+
         elif action == "login_seller":
-            response = server.login_seller(request, customer_db_stub_list, product_db_stub_list)
+            for _ in range(SERVER_RETRIES_N):
+                try:
+                    response = server.login_seller(request, customer_db_stub_list, product_db_stub_list)
+                    break
+                except:
+                    response = {"success": False, "message": "server disconnected"}
         elif action == "logout_seller":
-            response = server.logout_seller(request, customer_db_stub_list, product_db_stub_list)
+            for _ in range(SERVER_RETRIES_N):
+                try:
+                    response = server.logout_seller(request, customer_db_stub_list, product_db_stub_list)
+                    break
+                except:
+                    response = {"success": False, "message": "server disconnected"}
         elif action == "get_seller_rating":
-            response = server.get_seller_rating(request, customer_db_stub_list, product_db_stub_list)
+            for _ in range(SERVER_RETRIES_N):
+                try:
+                    response = server.get_seller_rating(request, customer_db_stub_list, product_db_stub_list)
+                    break
+                except:
+                    response = {"success": False, "message": "server disconnected"}
         elif action == "add_item":
-            response = server.add_item(request, customer_db_stub_list, product_db_stub_list)
+            for _ in range(SERVER_RETRIES_N):
+                try:
+                    response = server.add_item(request, customer_db_stub_list, product_db_stub_list)
+                    break
+                except:
+                    response = {"success": False, "message": "server disconnected"}
         elif action == "remove_item":
-            response = server.remove_item(request, customer_db_stub_list, product_db_stub_list)
+            for _ in range(SERVER_RETRIES_N):
+                try:
+                    response = server.remove_item(request, customer_db_stub_list, product_db_stub_list)
+                    break
+                except:
+                    response = {"success": False, "message": "server disconnected"}
         elif action == "change_price":
-            response = server.change_price(request, customer_db_stub_list, product_db_stub_list)
+            for _ in range(SERVER_RETRIES_N):
+                try:
+                    response = server.change_price(request, customer_db_stub_list, product_db_stub_list)
+                    break
+                except:
+                    response = {"success": False, "message": "server disconnected"}
         elif action == "all_items_by_seller":
-            response = server.all_items_by_seller(request, customer_db_stub_list, product_db_stub_list)
+            for _ in range(SERVER_RETRIES_N):
+                try:
+                    response = server.all_items_by_seller(request, customer_db_stub_list, product_db_stub_list)
+                    break
+                except:
+                    response = {"success": False, "message": "server disconnected"}
         else:
             response = {"success": False, "message": "Invalid action"}
 
@@ -498,6 +539,9 @@ def test_db(server, customer_db_stub, product_db_stub):
 
 # for TESTING ONLY
 def handle_request(server, request, customer_db_stub, product_db_stub):
+        
+        print("handle_request() does not implement multiple retries !!")
+
         action = request.get("action")
         request.pop("action")
 
