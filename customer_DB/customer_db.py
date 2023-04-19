@@ -462,8 +462,6 @@ class AtomicBroadcaster:
 
 
             ###### send msgs ######
-            assert self.seq_num_iter < self.max_global_seq_num or len(self.curr_req_msg) > 0, 'seq_msg_iter cannot be >= max_global_seq_num'
-
 
             next_seq_num_iter =  self.seq_num_iter + 1
             next_node_id = self.get_seq_num_assigner_id(next_seq_num_iter)
