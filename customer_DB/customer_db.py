@@ -437,17 +437,6 @@ class AtomicBroadcaster:
             self.all_node_max_seq_num_iter[id] = max(self.all_node_max_seq_num_iter[id], msg.meta_data.all_node_max_seq_num_iter[id])
 
 
-        print("-" * 5)
-        print(type(msg))
-        print(sender_id)
-        print(msg.meta_data.all_node_max_seq_num_iter)
-
-        print(self.all_node_max_seq_num_iter)
-        print('seq_num_iter', self.seq_num_iter, self.check_majority(self.seq_num_iter))
-        print('max_global_seq_num', self.max_global_seq_num, self.check_majority(self.max_global_seq_num))
-        print("-" * 5)
-
-
 
     def check_majority(self, seq_num):
         count = 0
