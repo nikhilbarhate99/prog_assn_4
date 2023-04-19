@@ -464,7 +464,7 @@ class AtomicBroadcaster:
             ###### send msgs ######
 
             next_seq_num_iter =  self.seq_num_iter + 1
-            next_node_id = self.get_seq_num_assigner_id(next_seq_num_iter)
+            next_assigner_id = self.get_seq_num_assigner_id(next_seq_num_iter)
             req_msg_w_no_seq = self.curr_req_msg.difference(self.curr_seq_msg)
                         
             ## if there are requests with assigned global seq num which this node does not have,
@@ -475,14 +475,14 @@ class AtomicBroadcaster:
 
                 # ask for corresponding seq msg
                 if next_seq_num_iter not in self.global_seq_buffer:
-                    self.send_retransmission_msg(next_node_id, None, next_seq_num_iter, 'sequence_msg_via_num')
+                    self.send_retransmission_msg(next_assigner_id, None, next_seq_num_iter, 'sequence_msg_via_num')
                 
                 # ask for corresponding req msg
                 else:
                     next_msg_id = self.global_seq_buffer[next_seq_num_iter]
                     node, local_seq_num = next_msg_id
                     if node not in self.request_msg_buffer or local_seq_num not in self.request_msg_buffer[node]:
-                        self.send_retransmission_msg(next_node_id, next_msg_id, None, 'request_msg')
+                        self.send_retransmission_msg(next_assigner_id, next_msg_id, None, 'request_msg')
 
                     # if both req and seq msg present in buffer, then move to next seq num
                     else:
@@ -494,7 +494,7 @@ class AtomicBroadcaster:
             elif len(req_msg_w_no_seq) > 0:
 
                 ## next node is this server and we still have req msg with no seq msg then assign it
-                if next_node_id == self.server_id:
+                if next_assigner_id == self.server_id:
                     global_seq_num = next_seq_num_iter
                     # choose next req_msg without global sequence
                     msg_id = next(iter(req_msg_w_no_seq))
