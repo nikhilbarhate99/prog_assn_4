@@ -175,11 +175,11 @@ class DBServer:
 
 
 class MetaData:
-    def __init__(self, max_global_seq_num=None, local_seq_num=None, seq_num_iter=None, node_wise_msgs=[]):
+    def __init__(self, max_global_seq_num=None, local_seq_num=None, seq_num_iter=None, all_node_max_seq_num_iter=[]):
         self.max_global_seq_num = max_global_seq_num
         self.local_seq_num = local_seq_num
         self.seq_num_iter = seq_num_iter
-        self.node_wise_msgs = node_wise_msgs
+        self.all_node_max_seq_num_iter = all_node_max_seq_num_iter
         
 class RequestMessage:
     def __init__(self, sender_id, msg_id, data, func_name, meta_data=None):
@@ -211,7 +211,7 @@ class AtomicBroadcaster:
         self.server_id = id
         self.node_list = node_list
         self.num_nodes = len(self.node_list)
-        self.majority_num_nodes = (self.num_nodes // 2) + 1 # for majority check
+        self.majority_nodes_num = (self.num_nodes // 2) + 1 # for majority check
 
         self.prev_server_id = self.server_id - 1 if self.server_id > 0 else self.num_nodes - 1
         self.next_server_id = self.server_id + 1 if self.server_id < self.num_nodes - 1 else 0
@@ -256,7 +256,8 @@ class AtomicBroadcaster:
         # set meta data 
         meta_data = MetaData(max_global_seq_num=self.max_global_seq_num, 
                              local_seq_num=self.local_seq_num,
-                             seq_num_iter=self.seq_num_iter)
+                             seq_num_iter=self.seq_num_iter,
+                             all_node_max_seq_num_iter=self.all_node_max_seq_num_iter)
         msg.meta_data = meta_data
         return msg
 
@@ -416,8 +417,9 @@ class AtomicBroadcaster:
         if msg.meta_data.max_global_seq_num > self.max_global_seq_num:
             self.max_global_seq_num = msg.meta_data.max_global_seq_num
 
-        # update max seq iter for that node
-        self.all_node_max_seq_num_iter[sender_id] = max(self.all_node_max_seq_num_iter[sender_id], msg.meta_data.seq_num_iter)
+        # update max seq iter for all nodes     
+        for id in range(self.num_nodes):
+            self.all_node_max_seq_num_iter[id] = max(self.all_node_max_seq_num_iter[id], msg.meta_data.all_node_max_seq_num_iter[id])
 
 
     def check_majority(self, seq_num):
@@ -425,7 +427,7 @@ class AtomicBroadcaster:
         for id in range(self.num_nodes):
             if self.all_node_max_seq_num_iter[id] >= seq_num:
                 count += 1
-        return count >= self.majority_num_nodes
+        return count >= self.majority_nodes_num
 
 
     def consensus(self):
@@ -611,8 +613,13 @@ class AtomicBroadcaster:
         
 
         print("&" * 45)
+        print("-" * 5)
         print("list of delivered request")
-
+        print("-" * 5)
+        print(self.all_node_max_seq_num_iter)
+        print('seq_num_iter', self.seq_num_iter, self.check_majority(self.seq_num_iter))
+        print('max_global_seq_num', self.max_global_seq_num, self.check_majority(self.max_global_seq_num))
+        print("-" * 5)
         for k in self.list_of_delivered_requests:
             print(k)
             

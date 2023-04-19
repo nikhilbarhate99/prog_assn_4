@@ -163,7 +163,6 @@ class DBServer(SyncObj):
             return {"success": False}
 
 
-
 _g_DB = None
 
 

@@ -40,8 +40,6 @@ class SellerClient:
 
                 response_data = {"success": False, "message": "No response from server"}
 
-            
-
         return response_data
 
 

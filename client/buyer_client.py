@@ -109,7 +109,6 @@ class BuyerClient:
             else:
                 response_data = {"success": False, "message": "No response from server"}
             
-
         return response_data
 
     def add_to_cart(self, username, prod_id, quantity):
