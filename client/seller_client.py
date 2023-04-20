@@ -300,6 +300,57 @@ def function_calls(client, func_id):
             except:
                 response_data = {"success": False, "message": "Server Disconnected"}
 
+    elif func_id == 2:
+        for _ in range(CLIENT_RETRIES_N):
+            try:
+                item = {"name": "item2", 
+                      "category" : 0, 
+                      "condition" : "new", 
+                      "keywords" : ("k1", "k2", "k3"), 
+                      "price" : 100
+                      }
+                response_data = client.add_item("123",item,"12")
+                break
+            except:
+                response_data = {"success": False, "message": "Server Disconnected"}
+
+
+    elif func_id == 3:
+        for _ in range(CLIENT_RETRIES_N):
+            try:
+                response_data = client.get_seller_rating("123")
+                break
+            except:
+                response_data = {"success": False, "message": "Server Disconnected"}
+
+
+
+    elif func_id == 4:
+        for _ in range(CLIENT_RETRIES_N):
+            try:
+                response_data = client.remove_item(0,3,"123")
+                break
+            except:
+                response_data = {"success": False, "message": "Server Disconnected"}
+
+
+    elif func_id == 5:
+        for _ in range(CLIENT_RETRIES_N):
+            try:
+                response_data = client.change_price(123,50,"123")
+                break
+            except:
+                response_data = {"success": False, "message": "Server Disconnected"}
+
+
+    elif func_id == 6:
+        for _ in range(CLIENT_RETRIES_N):
+            try:
+                response_data = client.logout("123")
+                break
+            except:
+                response_data = {"success": False, "message": "Server Disconnected"}
+
 
     # item = {"name": "item2", 
     #         "category" : 0, 
