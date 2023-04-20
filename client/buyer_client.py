@@ -272,6 +272,76 @@ def function_calls(client, func_id):
                 response_data = {"success": False, "message": "Server Disconnected"}
 
 
+    elif func_id == 2:
+        for _ in range(CLIENT_RETRIES_N):
+            try:
+                response_data = client.add_to_cart("12345",123,1)
+                break
+            except:
+                response_data = {"success": False, "message": "Server Disconnected"}
+
+
+    elif func_id == 3:
+        for _ in range(CLIENT_RETRIES_N):
+            try:
+                response_data = client.display_cart("12345")
+                break
+            except:
+                response_data = {"success": False, "message": "Server Disconnected"}
+    
+
+    elif func_id == 4:
+        for _ in range(CLIENT_RETRIES_N):
+            try:
+                response_data = client.clear_cart("12345")
+                break
+            except:
+                response_data = {"success": False, "message": "Server Disconnected"}
+    
+
+    elif func_id == 5:
+        for _ in range(CLIENT_RETRIES_N):
+            try:
+                response_data = client.make_purchase("12345","12345678")
+                break
+            except:
+                response_data = {"success": False, "message": "Server Disconnected"}
+    
+    elif func_id == 6:
+        for _ in range(CLIENT_RETRIES_N):
+            try:
+                response_data = client.get_purchase_history("12345")
+                break
+            except:
+                response_data = {"success": False, "message": "Server Disconnected"}
+    
+    elif func_id == 7:
+        for _ in range(CLIENT_RETRIES_N):
+            try:
+                response_data = client.get_seller_rating("123")
+                break
+            except:
+                response_data = {"success": False, "message": "Server Disconnected"}
+    
+    elif func_id == 8:
+        for _ in range(CLIENT_RETRIES_N):
+            try:
+                keywords=["k1","k2","k3"]
+                response_data = client.search(0, keywords, "12345")
+                break
+            except:
+                response_data = {"success": False, "message": "Server Disconnected"}
+    
+    elif func_id == 9:
+        for _ in range(CLIENT_RETRIES_N):
+            try:
+                response_data = client.logout("12345")
+                break
+            except:
+                response_data = {"success": False, "message": "Server Disconnected"}
+    
+
+
 
     # client.add_to_cart("12345", 123445, 1)
 
@@ -318,7 +388,6 @@ if __name__ == '__main__':
     parser.add_argument('--func_id', type=int, default=0)
     args = parser.parse_args()
     start_client(args)
-
 
 
 
