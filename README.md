@@ -18,29 +18,28 @@ Nikhil Barhate and Sriranga Kalkunte Ramaswamy
 
 | seller client function | scenario 1 | scenario 2 | scenario 3 | scenario 4 |
 | --- | --- | --- | --- | --- |
-| create_seller | 0.474436 | 0 | 0 | 0 |
-| login_seller | 0.414926 | 0 | 0 | 0 |
-| logout_seller | 0.471316 | 0 | 0 | 0 |
-| get_seller_rating | 0.413295 | 0 | 0 | 0 |
-| add_item | 0.481851 | 0 | 0 | 0 |
-| remove_item | 0.445516 | 0 | 0 | 0 |
-| change_price | 0.407842 | 0 | 0 | 0 |
-| all_items_by_seller | 0.406970 | 0 | 0 | 0 |
-
+| create_seller | 0.9269 | 0.8709 | 0.8681 | 0.8334 |
+| login_seller | 0.8855 | 0.8829 | 0.8864 | 0.9001 |
+| add_item | 1.0717 | 1.1217 | 1.2141 | 1.2264 |
+| get_seller_rating | 0.7836 | 0.7911 | 0.9193 | 0.8042 |
+| remove_item | 0.9468 | 1.1188 | 1.0768 | 1.2526 |
+| change_price | 1.0346 | 1.0576 | 1.0789 | 1.1936 |
+| all_items_by_seller | 0.8256 | 0.8315 | 0.9236 | 0.9287 |
+| logout_seller | 0.8144 | 0.8395 | 0.8892 | 0.8718 |
 
 | buyer client function | scenario 1 | scenario 2 | scenario 3 | scenario 4 |
 | --- | --- | --- | --- | --- |
-| create_buyer | 0.406699 | 0 | 0 | 0 |
-| login_buyer | 0.447198 | 0 | 0 | 0 |
-| logout_buyer | 0.422077 | 0 | 0 | 0 |
-| display_cart | 0.414161 | 0 | 0 | 0 |
-| add_to_cart | 0.525875 | 0 | 0 | 0 |
-| remove_cart | 0.436251 | 0 | 0 | 0 |
-| clear_cart | 0.413526 | 0 | 0 | 0 |
-| search_items | 0.370387 | 0 | 0 | 0 |
-| get_purchase_history | 0.409650 | 0 | 0 | 0 |
-| make_purchase | 0.568279 | 0 | 0 | 0 |
-| get_seller_rating | 0.397811 | 0 | 0 | 0 |
+| create_buyer | 0.9150 | 0.9715 | 0.9245 | 0.9762 |
+| login_buyer | 0.8894 | 0.9575 | 0.9771 | 0.9812 |
+| logout_buyer | 0.8216 | 0.9891 | 0.9802 | 0.9955 |
+| display_cart | 1.6051 | 1.7531 | 1.6262 | 1.6594 |
+| add_to_cart | 1.8829 | 1.9215 | 1.9287 | 1.9755 |
+| remove_cart | 0.8497 | 0.8562 | 0.8519 | 0.8630 |
+| clear_cart | 1.4623 | 1.6972 | 1.6436 | 1.6320 |
+| search_items | 0.5687 | 0.5781 | 0.5946 | 0.5910 |
+| get_purchase_history | 1.7875 | 1.8618 | 1.8720 | 1.8609 |
+| make_purchase | 2.6436 | 2.5718 | 3.6691 | 3.3875 |
+| get_seller_rating | 0.6987 | 0.7258 | 0.7967 | 0.8483 |
 
 
 
