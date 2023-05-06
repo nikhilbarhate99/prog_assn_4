@@ -342,24 +342,7 @@ def function_calls(client, func_id):
     
 
 
-
-    # client.add_to_cart("12345", 123445, 1)
-
-    # client.display_cart("12345")
-
-    # # client.make_purchase("12345", "12345678")
-
-    # # client.get_purchase_history("12345")
-
-    # client.clear_cart("12345")
-
-    # # keywords = ["k1","k2","k3"]
-    
-    # # client.search_items(0, keywords, "12345")
-
-    # client.get_seller_rating("123")
-
-    # client.logout("12345")
+    return response_data
     
 
 
@@ -373,8 +356,8 @@ def start_client(args):
     start_time = time.time()
 
     for i in range(max_iterations):
-        function_calls(client, func_id)
-        print(i, time.time() - start_time)
+        response_data = function_calls(client, func_id)
+        # print(i, time.time() - start_time)
 
     end_time = time.time()
     total_time = end_time - start_time

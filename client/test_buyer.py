@@ -1,4 +1,4 @@
-from buyer_client import BuyerClient
+from client.buyer_client import BuyerClient
 import os
 
 

@@ -352,22 +352,7 @@ def function_calls(client, func_id):
                 response_data = {"success": False, "message": "Server Disconnected"}
 
 
-    # item = {"name": "item2", 
-    #         "category" : 0, 
-    #         "condition" : "new", 
-    #         "keywords" : ("k1", "k2", "k3"), 
-    #         "price" : 100
-    #         }
-
-    # client.add_item("123",item,"12")
-
-    # client.get_seller_rating("123")
-
-    # client.remove_item(0,3,"123")
-
-    # client.change_price(123,50,"123")
-
-    # client.all_items_by_seller("123")
+    return response_data
 
 
 
@@ -381,8 +366,8 @@ def start_client(args):
     start_time = time.time()
 
     for i in range(max_iterations):
-        function_calls(client, func_id)
-        print(i, time.time() - start_time)
+        response_data = function_calls(client, func_id)
+        # print(i, time.time() - start_time)
 
     end_time = time.time()
     total_time = end_time - start_time

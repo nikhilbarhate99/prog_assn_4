@@ -643,7 +643,7 @@ class AtomicBroadcaster:
                 return_response_dict = response_dict
         
 
-        print("&" * 45)
+        print("@" * 30)
         print("-" * 5)
         print("list of delivered request")
         print("-" * 5)
@@ -654,7 +654,7 @@ class AtomicBroadcaster:
         for k in self.list_of_delivered_requests:
             print(k)
             
-        print("&" * 45)
+        print("@" * 30)
 
         # return curr response dict
         return return_response_dict

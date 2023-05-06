@@ -1,4 +1,4 @@
-from seller_client import SellerClient
+from client.seller_client import SellerClient
 import os
 
 def print_response(response):
