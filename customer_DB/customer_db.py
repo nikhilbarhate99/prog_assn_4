@@ -494,6 +494,8 @@ class AtomicBroadcaster:
             elif len(req_msg_w_no_seq) > 0:
 
                 ## next node is this server and we still have req msg with no seq msg then assign it
+                ## since all nodes assign global seq num in an order (s assigned by node_num = s % node_num), 
+                ## Node will never have unassigned request messages which it needs to assign global_seq_num if seq_num_iter < max_global_seq_num
                 if next_assigner_id == self.server_id:
                     global_seq_num = next_seq_num_iter
                     # choose next req_msg without global sequence
